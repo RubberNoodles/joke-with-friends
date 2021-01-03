@@ -30,7 +30,7 @@ app.post('/signup', signup);
 // login route
 app.post('/login', login);
 
-// uploading an image
-app.post('/user/image', uploadImage);
+// uploading an image (as profile picture?)
+app.post('/user/image', FBAuth, uploadImage);
 
 exports.api = functions.https.onRequest(app);

@@ -1,5 +1,5 @@
 // File for dealing with authentication of users: signup, login
-const { db } = require('../util/admin');
+const { admin, db } = require('../util/admin');
 
 const config = require('../util/config');
 const firebase = require('firebase');
@@ -112,12 +112,35 @@ exports.uploadImage = (req, res) => {
     const busboy = new BusBoy({ headers: req.headers });
 
     busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+        console.log(fieldname);
+        console.log(filename);
+        console.log(mimetype);
         // given image.png, we want the .png file.
         const imageExtension = filename.split('.').slice(-1)[0]; // i.e. .png, .jpg
-        const imageFileName = `${Math.round(Math.random()*1000)}.${imageExtension}`; //3424234.png
+        imageFileName = `${Math.round(Math.random()*1000)}.${imageExtension}`; //3424234.png
         // os.tmpdir because this is like a cloud server or something like that
         const filepath = path.join(os.tmpdir(), imageFileName)
+        imageToBeUploaded = { filepath, mimetype } // this variable doesn't actually have cool info
+        // .pipe is some node.js thing what.
+        file.pipe(fs.createWriteStream(filepath));
 
-
+    busboy.on('finish', () => {
+        // complete busboy process? 
+        // this admin stuff is in the firebase documentation.
+        admin.storage().bucket().upload(imageToBeUploaded.filepath, { 
+        resumable: false,
+        metadata: {
+            metadata: {
+                contentType: imageToBeUploaded.mimetype
+            }
+        }
+        })
     })
-}
+    .then( () => {
+        // alt=media prints it to browser rather than just downloading
+        const imageUrl = `https://firebasestorage.googleapis.com/v/0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
+        // our user needs to have a key with the imageUrl
+        return db.doc
+    })
+    })
+};
