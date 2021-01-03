@@ -19,6 +19,10 @@ exports.signup = (req, res) => {
         handle: req.body.handle,
     };
 
+    // we also want to give them an image.
+
+    const noImg = 'no-img.png';
+
     const { errors, valid } = validateSignupData(newUser);
 
     if (!valid) return res.status(400).json(errors);
@@ -49,6 +53,7 @@ exports.signup = (req, res) => {
             const userCredentials = {
                 handle: newUser.handle,
                 email: newUser.email,
+                imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImg}?alt=media`,
                 timeCreated: new Date().toISOString(),
                 userId
             }
@@ -112,17 +117,20 @@ exports.uploadImage = (req, res) => {
     const busboy = new BusBoy({ headers: req.headers });
 
     busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-        console.log(fieldname);
-        console.log(filename);
-        console.log(mimetype);
+
+        // we want to prevent bad mimetypes
+        if (mimetype !== 'image/jpeg' && mimetype !== 'image/png') {
+            return res.staatus(400).json({error: "Wrong file type submitted"});
+        }
         // given image.png, we want the .png file.
         const imageExtension = filename.split('.').slice(-1)[0]; // i.e. .png, .jpg
-        imageFileName = `${Math.round(Math.random()*1000)}.${imageExtension}`; //3424234.png
+        imageFileName = `${Math.round(Math.random()*100000000)}.${imageExtension}`; //3424234.png
         // os.tmpdir because this is like a cloud server or something like that
         const filepath = path.join(os.tmpdir(), imageFileName)
         imageToBeUploaded = { filepath, mimetype } // this variable doesn't actually have cool info
         // .pipe is some node.js thing what.
         file.pipe(fs.createWriteStream(filepath));
+    });
 
     busboy.on('finish', () => {
         // complete busboy process? 
@@ -135,12 +143,21 @@ exports.uploadImage = (req, res) => {
             }
         }
         })
-    })
-    .then( () => {
-        // alt=media prints it to browser rather than just downloading
-        const imageUrl = `https://firebasestorage.googleapis.com/v/0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
-        // our user needs to have a key with the imageUrl
-        return db.doc
-    })
-    })
+        .then( () => {
+            // alt=media prints it to browser rather than just downloading
+            const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
+            // our user needs to have a key with the imageUrl
+            // req.user.handle comes from the FBAuth. 
+            // update takes in a field and a value and it updates that specific field.
+            return db.doc(`/users/${req.user.handle}`).update({ imageUrl })
+        })
+        .then(() => {
+            return res.json({ message: "Image Uploaded Successfully"});
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({ error: err.code});
+            });
+    });
+    busboy.end(req.rawBody);
 };
