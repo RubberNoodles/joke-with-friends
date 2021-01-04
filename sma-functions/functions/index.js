@@ -4,8 +4,20 @@ const functions = require('firebase-functions');
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
-const { getAllJokes, postOneJoke, getJoke } = require('./handlers/jokes.js'); 
-const { signup, login, uploadImage, uploadUserData, getUserData } = require('./handlers/users.js');
+const {  
+  getAllJokes, 
+  postOneJoke, 
+  getJokeData,
+  commentOnJoke } = require('./handlers/jokes.js'); 
+  
+const { 
+  signup, 
+  login, 
+  uploadImage, 
+  uploadUserData, 
+  getUserData } = require('./handlers/users.js');
+
+
 const FBAuth = require('./util/FBAuth.js');
 
 const express = require('express');
@@ -25,7 +37,10 @@ app.get('/jokes', getAllJokes);
 app.post('/joke', FBAuth, postOneJoke);
 
 // obtain a specific joke basaed on the id
-app.get('/joke/:jokeId', getJoke);
+app.get('/joke/:jokeId', getJokeData);
+
+// comment on a specific joke
+app.post('/joke/:jokeId/comment', FBAuth, commentOnJoke);
 
 // signup route
 app.post('/signup', signup);

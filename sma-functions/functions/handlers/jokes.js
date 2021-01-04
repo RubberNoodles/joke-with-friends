@@ -40,16 +40,17 @@ exports.postOneJoke = (req, res) => {
         })
 };
 
-exports.getJoke = (req,res) => {
+exports.getJokeData = (req,res) => {
     // gets all the data aabout the joke, and then also the data w.r.t to the comments
-    const jokeData = {};
+    let jokeData;
     const jokeId = req.params.jokeId.trim(); // quick rename
     db.doc(`Jokes/${jokeId}`).get()
     .then( doc => {
         if (doc.exists) {
-            jokeData.content = doc.data();
+            jokeData = doc.data();
+            jokeData.jokeId = doc.id;
         } else {
-            return res.status(400).json({error: `Joke with id ${jokeId} not found`})
+            return res.status(404).json({error: `Joke with id ${jokeId} not found`})
         }
     })
     .catch( err => {
@@ -72,4 +73,26 @@ exports.getJoke = (req,res) => {
         console.error(err);
         return res.status(400).json({ error: err.code });
     });
-}
+};
+
+exports.commentOnJoke = (req, res) => {
+    if (req.body.body.trim() === '') return res.status(400).json({body: "Must not be empty"});
+    const newComment = {
+        jokeId: req.params.jokeId.trim(),
+        timeCreated: new Date().toISOString(),
+        userHandle: req.user.handle,
+        userImgUrl: req.user.imageUrl,
+        body: req.body.body,
+    };
+
+    console.log(newComment);
+    db.collection('comments').add(newComment)
+    .then( doc => {
+        return res.status(200).json(newComment);
+    })
+    .catch( err => {
+        console.error(err);
+        return res.json({ error: err.code });
+    });
+};
+
