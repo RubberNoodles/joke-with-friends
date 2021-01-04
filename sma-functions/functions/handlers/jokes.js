@@ -35,7 +35,41 @@ exports.postOneJoke = (req, res) => {
             return res.json({ message: `document ${doc.id} created successfully`});
         })
         .catch(err => {
-            res.status(500).json( {error: "Some issue"});
             console.error(err);
+            return es.status(500).json( {error: "Some issue"});
         })
 };
+
+exports.getJoke = (req,res) => {
+    // gets all the data aabout the joke, and then also the data w.r.t to the comments
+    const jokeData = {};
+    const jokeId = req.params.jokeId.trim(); // quick rename
+    db.doc(`Jokes/${jokeId}`).get()
+    .then( doc => {
+        if (doc.exists) {
+            jokeData.content = doc.data();
+        } else {
+            return res.status(400).json({error: `Joke with id ${jokeId} not found`})
+        }
+    })
+    .catch( err => {
+        console.error(err);
+        return res.status(500).json({ error: err.code });
+    });
+
+    db.collection('comments')
+    .orderBy('timeCreated','desc')
+    .where("jokeId","==",jokeId)
+    .get()
+    .then(data => {
+        jokeData.comments = [];
+        data.forEach( doc => {
+            jokeData.comments.push(doc.data());
+        });
+        return res.status(200).json(jokeData)
+    })
+    .catch(err => {
+        console.error(err);
+        return res.status(400).json({ error: err.code });
+    });
+}

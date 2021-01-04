@@ -1,3 +1,5 @@
+const { UserRecordMetadata } = require("firebase-functions/lib/providers/auth");
+
 const isEmpty =(string) => {
     if (string.trim() == '') {
         return true;
@@ -60,3 +62,17 @@ exports.validateLoginData = data => {
         valid: Object.keys(errors).length === 0 ? true : false
     };
 };
+
+exports.simplifyUserData = ({bio, website, location}) => {
+    let userData = {}
+    if (!isEmpty(bio)) userData.bio = bio;
+    if (!isEmpty(website)) {
+        if (website.substring(0,4) == 'http') {
+            userData.website= website;
+        } else {
+            userData.website = "https://" + website;
+        }
+    };
+    if (!isEmpty(location)) userData.location = location;
+    return userData
+}

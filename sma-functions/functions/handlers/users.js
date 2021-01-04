@@ -8,7 +8,7 @@ firebase.initializeApp(config);
 
 // helper handlers/functions
 
-const { validateSignupData, validateLoginData } = require('../util/validators.js');
+const { validateSignupData, validateLoginData, simplifyUserData } = require('../util/validators.js');
 
 
 exports.signup = (req, res) => {
@@ -103,6 +103,46 @@ exports.login = (req, res) => {
             }
             return res.status(500).json({error: err.code});
         });
+};
+
+exports.uploadUserData = (req, res) => {
+    const userData = simplifyUserData(req.body);
+    // there are three things, bio, website, and location.
+
+    db.doc(`users/${req.user.handle}`).update(userData)
+    .then( () => {
+        return res.json({ user: "User data updated"})
+    })
+    .catch( err => {
+        console.error(err);
+        return res.status(400).json( {error: err.code});
+    })
+};
+
+exports.getUserData = (req, res) => {
+    let userData = {};
+    db.doc(`users/${req.user.handle}`).get()
+    .then( doc => {
+        if (doc.exists) {
+            userData.credentials = {};
+            userData.credentials = doc.data(); // this just receives the data from uploadUserData
+            return db.collection('likes').where('userHandle', '==', req.user.handle).get();
+        } else {
+            return res.status(500).json({ documents: "Requested Firebasedocuments not found"});
+        }
+    })
+    .then( data => {
+        userData.likes = [];
+        data.forEach( jokeDoc => {
+            userData.likes.push(jokeDoc.data());
+        })
+        return res.json( userData );
+    })
+    .catch( err => {
+        console.error(err);
+        return res.status(500).json({ error: err.code});
+    });
+    // some of the data is ez pz, but the likes are a bit more weird.
 };
 
 exports.uploadImage = (req, res) => {

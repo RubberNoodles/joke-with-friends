@@ -4,8 +4,8 @@ const functions = require('firebase-functions');
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
-const { getAllJokes, postOneJoke } = require('./handlers/jokes.js'); 
-const { signup, login, uploadImage } = require('./handlers/users.js');
+const { getAllJokes, postOneJoke, getJoke } = require('./handlers/jokes.js'); 
+const { signup, login, uploadImage, uploadUserData, getUserData } = require('./handlers/users.js');
 const FBAuth = require('./util/FBAuth.js');
 
 const express = require('express');
@@ -24,11 +24,22 @@ app.get('/jokes', getAllJokes);
 // create a joke
 app.post('/joke', FBAuth, postOneJoke);
 
+// obtain a specific joke basaed on the id
+app.get('/joke/:jokeId', getJoke);
+
 // signup route
 app.post('/signup', signup);
 
 // login route
 app.post('/login', login);
+
+// upload more user data
+app.post('/user/data', FBAuth, uploadUserData);
+
+// get ALL the data on a single user
+app.get('/user/data', FBAuth, getUserData);
+
+// the only way of sending data through a get request is via the url.
 
 // uploading an image (as profile picture?)
 app.post('/user/image', FBAuth, uploadImage);
