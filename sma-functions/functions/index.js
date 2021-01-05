@@ -8,7 +8,9 @@ const {
   getAllJokes, 
   postOneJoke, 
   getJokeData,
-  commentOnJoke } = require('./handlers/jokes.js'); 
+  commentOnJoke,
+  likeJoke,
+  unlikeJoke } = require('./handlers/jokes.js'); 
   
 const { 
   signup, 
@@ -41,6 +43,10 @@ app.get('/joke/:jokeId', getJokeData);
 
 // comment on a specific joke
 app.post('/joke/:jokeId/comment', FBAuth, commentOnJoke);
+
+// like or unlike a joke
+app.post('/joke/:jokeId/like', FBAuth, likeJoke);
+app.post('/joke/:jokeId/unlike', FBAuth, unlikeJoke);
 
 // signup route
 app.post('/signup', signup);
