@@ -1,6 +1,6 @@
 const functions = require('firebase-functions');
 
-
+const { db } = require('./util/admin');
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
@@ -10,7 +10,8 @@ const {
   getJokeData,
   commentOnJoke,
   likeJoke,
-  unlikeJoke } = require('./handlers/jokes.js'); 
+  unlikeJoke,
+  deleteJoke } = require('./handlers/jokes.js'); 
   
 const { 
   signup, 
@@ -48,6 +49,9 @@ app.post('/joke/:jokeId/comment', FBAuth, commentOnJoke);
 app.post('/joke/:jokeId/like', FBAuth, likeJoke);
 app.post('/joke/:jokeId/unlike', FBAuth, unlikeJoke);
 
+// delete joke
+app.delete('/joke/:jokeId', FBAuth, deleteJoke);
+
 // signup route
 app.post('/signup', signup);
 
@@ -66,3 +70,20 @@ app.get('/user/data', FBAuth, getUserData);
 app.post('/user/image', FBAuth, uploadImage);
 
 exports.api = functions.https.onRequest(app);
+
+exports.createNotificationOnLike = functions.firestore.document(`likes/{id}`)
+  .onCreate( snapshot => {
+    db.doc(`/Jokes/${snapshot.data().jokeId}`).get()
+    .then(doc => {
+      if (doc.exists) {
+        return db.doc(`/notifications/${snapshot.id}`).set({
+          createdAt: new Date().toISOString,
+          receipient: doc.data().handle,
+          sender: snapshot.data().userHandle,
+          jokeId: snapshot.data().jokeId,
+          type: "like",
+          read: false
+        })
+      }
+    })
+  })

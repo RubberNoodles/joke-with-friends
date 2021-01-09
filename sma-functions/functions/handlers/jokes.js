@@ -10,7 +10,7 @@ exports.getAllJokes = (request, response) => {
         let jokes = [];
         data.forEach(doc => {
             jokes.push({
-                screamId: doc.id,
+                jokeId: doc.id,
                 ...doc.data()
                 });
         });
@@ -90,8 +90,17 @@ exports.commentOnJoke = (req, res) => {
         body: req.body.body,
     };
 
-    console.log(newComment);
-    db.collection('comments').add(newComment)
+    db.doc(`Jokes/${req.params.jokeId}`).get()
+    .then( (doc) => {
+        if (doc.exists) {
+            return doc.ref.update({ commentCount: doc.data().commentCount + 1 }); // .ref is a new function woah
+        } else {
+            return res.status(400).json({ error: "joke not found" });
+        }
+    })
+    .then( () => {
+        return db.collection('comments').add(newComment);
+    })
     .then( doc => {
         return res.status(200).json(newComment);
     })
@@ -102,6 +111,127 @@ exports.commentOnJoke = (req, res) => {
 };
 
 exports.likeJoke = (req, res) => {
+    const likeDocument = db
+      .collection('likes')
+      .where('userHandle', '==', req.user.handle)
+      .where('jokeId', '==', req.params.jokeId)
+      .limit(1);
+  
+    const jokeDocument = db.doc(`/Jokes/${req.params.jokeId}`);
+  
+    let jokeData;
+  
+    jokeDocument
+      .get()
+      .then((doc) => {
+        if (doc.exists) {
+          jokeData = doc.data();
+          jokeData.jokeId = doc.id;
+          return likeDocument.get();
+        } else {
+          return res.status(404).json({ error: 'joke not found' });
+        }
+      })
+      .then((data) => {
+        if (data.empty) {
+          return db
+            .collection('likes')
+            .add({
+              jokeId: req.params.jokeId,
+              userHandle: req.user.handle
+            })
+            .then(() => {
+              jokeData.likeCount++;
+              return jokeDocument.update({ likeCount: jokeData.likeCount });
+            })
+            .then(() => {
+              return res.json(jokeData);
+            });
+        } else {
+          return res.status(400).json({ error: 'joke already liked' });
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        res.status(500).json({ error: err.code });
+      });
+  };
+
+
+exports.unlikeJoke = (req, res) => {
+    const likeDocument = db
+      .collection('likes')
+      .where('userHandle', '==', req.user.handle)
+      .where('jokeId', '==', req.params.jokeId)
+      .limit(1);
+  
+    const jokeDocument = db.doc(`/Jokes/${req.params.jokeId}`);
+
+    let jokeData;
+
+    // pathway: get data from the joke document => if 
+    
+    jokeDocument.get() // yes, always remember to check if a doc exists
+    .then( (doc) => {
+        if (doc.exists) {
+            jokeData = doc.data();
+            jokeData.jokeId = doc.id;
+            return likeDocument.get();
+        } else {
+            return res.status(404).json({ error: 'joke not found' });
+        }
+    })
+    .then( (data) => {
+        if (!data.empty) {
+            // if there a joke is actually liked; i want to remove this 
+            return db.collection('likes').doc(data.data().jokeId).delete()
+            .then(() => {
+                jokeData.likeCount--;
+                return jokeDocument.update({ likeCount: jokeData.likeCount });
+            })
+            .then(() => {
+                return res.json(jokeData);
+            });
+        } else {
+            return res.status(500).json({ error: "joke already unliked"})
+        }
+
+    })
+    .catch( err => {
+        console.error(err);
+        return res.json({ error: err.code });
+    });
+};
+
+exports.deleteJoke = (req, res) => {
+    let likeNumber;
+    //check if the joke was made by the user.
+    db.doc(`Jokes/${req.params.jokeId}`).get()
+    .then( doc => {
+        if (doc.exists) {
+            if (req.user.handle == doc.data().handle) {
+                likeNumber = doc.data().likeCount;
+                return doc.ref.delete();
+            } else {
+                return res.status(400).json({ error: "Not Authorized"});
+            } 
+        } else {
+            return res.status(500).json({ error: "Document not found"});
+        }
+    })
+    .then(() => {
+        return res.json({ delete: "Joke was not funny, so it was deleted"});
+    })
+    .catch( err => {
+        console.error(err);
+        return res.status(500).json({ error: err.code });
+    });
+    
+    // Deal with the user's like count LATER?? WIP
+};
+/*
+    
+    }
     const jokeId = req.params.jokeId.trim();
     const likeData = {
         userHandle: req.user.handle,
@@ -149,37 +279,4 @@ exports.likeJoke = (req, res) => {
         return res.status(500).json({ error: err.code});
     })
 };
-
-exports.unlikeJoke = (req, res) => {
-    const jokeId = req.params.jokeId.trim();
-    const likeData = {
-        userHandle: req.user.handle,
-        jokeId
-    }
-    db.collection(`users/${req.user.handle}`).get()
-    .then( doc => {
-        if (doc.exists) {
-            return db.collection('likes').where('userHandle', '==', likeData.userHaandle).get();
-        } else {
-            return req.status(400).json({ error: "Not authorized"});
-        }
-    })
-    .then( docs => {
-        const userLiked = false;
-        docs.forEach( doc => {
-            if (doc.data().userHandle == likeData.handle) userLiked = true;
-        })
-        if (!userLiked) {
-            return db.collection('likes').add()
-        } else {
-            return req.status(500).json({ error: "User already liked image" });
-        }
-    } )
-    .then( doc => {
-        return req.status(200).json({ like: `Joke with id ${doc.id} has been unliked.`});
-    })
-    .catch( err => {
-        console.error(err);
-        return req.json({ error: err.code});
-    })
-};
+*/

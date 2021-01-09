@@ -14,11 +14,13 @@ let db = {
     },
     jokes:
         {
-            userHandle: 'user',
+            handle: 'user',
             body: 'this is the content of the description',
             timeCreated: '2020-12-29T00:35:29.543Z', // This is an "ISOString" or some shit.
+            imageUrl: "https://firebasestorage.googleapis.com/v0/b/social-media-6297e.appspot.com/o/791.jpg?alt=media",
             likeCount: 5,
-            commentCount: 2, // try to reduce reads on our database since firebase charges based on reads.
+            commentCount: 2,
+            jokeId: "nX07hphn1yd3OfDm7Uar", // try to reduce reads on our database since firebase charges based on reads.
         },
 }
 
@@ -50,4 +52,15 @@ const comment = {
     jokeId: "2wR76BBGqeJyLAeWM9eG",
     timeCreated: "January 3, 2021 at 12:00:00 AM UTC-7",
     userHandle: "user"
+};
+
+const notifications = [
+    {
+        receipient: 'user',
+        sender: 'otherUser',
+        read: 'true | false',
+        jokeId: 'alksdjflaawehkfjha ;el',
+        type: 'like | comment',
+        createdAt: 'theISOSTRING DATE thing'
 }
+]
