@@ -1,8 +1,9 @@
+
 let db = {
     user: {
         handle: 'user',
         email: 'someone@gmail.com',
-        timeCreated: '2021-01-03T20:46:26.852Z'
+        timeCreated: '2021-01-03T20:46:26.852Z',
         location: ' canada',
         userId: 'vc3u52asWKSJnTxaXnLS33j8NK32',
         imageUrl: 'https://firebasestorage.googleapis.com/v0/b/social-media-6297e.appspot.com/o/791.jpg?alt=media',
@@ -29,7 +30,7 @@ const userDetails = {
         credentials: {
             handle: 'user',
             email: 'someone@gmail.com',
-            timeCreated: '2021-01-03T20:46:26.852Z'
+            timeCreated: '2021-01-03T20:46:26.852Z',
             location: ' canada',
             userId: 'vc3u52asWKSJnTxaXnLS33j8NK32',
             imageUrl: 'https://firebasestorage.googleapis.com/v0/b/social-media-6297e.appspot.com/o/791.jpg?alt=media',

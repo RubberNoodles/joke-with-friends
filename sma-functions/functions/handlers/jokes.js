@@ -1,3 +1,4 @@
+/* eslint-disable eqeqeq */
 // Things that have to do with handling jokes. Atm you can make a joke, and get all the jokes.
 const { db } = require('../util/admin');
 
@@ -11,7 +12,7 @@ exports.getAllJokes = (request, response) => {
         data.forEach(doc => {
             jokes.push({
                 jokeId: doc.id,
-                ...doc.data()
+                ...doc.data(),
                 });
         });
         return response.json(jokes); // I guess the response parameter is just the thing we have to edit?
@@ -54,6 +55,7 @@ exports.getJokeData = (req,res) => {
         if (doc.exists) {
             jokeData = doc.data();
             jokeData.jokeId = doc.id;
+            return;
         } else {
             return res.status(404).json({error: `Joke with id ${jokeId} not found`})
         }

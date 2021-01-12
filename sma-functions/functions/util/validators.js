@@ -1,7 +1,6 @@
-const { UserRecordMetadata } = require("firebase-functions/lib/providers/auth");
-
+/* eslint-disable no-useless-escape */
 const isEmpty =(string) => {
-    if (string.trim() == '') {
+    if (string.trim() === '') {
         return true;
     } else {
         return false;
@@ -24,21 +23,21 @@ exports.validateSignupData = data => {
         errors.email = "Must not be empty";
     } else if (!isEmail(data.email)) {
         errors.email = "Must be a valid email address";
-    };
+    }
 
     if (isEmpty(data.password)) {
         errors.password = "Must not be empty";
-    };
+    }
 
     if (isEmpty(data.handle)) {
         errors.handle = "Must not be empty";
     } else if (data.handle.includes("/")) {
         errors.handle = "Invalid characters: Hint no '/' characters";
-    };
+    }
 
     if (data.password !== data.confirmPassword) {
         errors.confirmPassword = "Passwords do not match";
-    };
+    }
 
     return {
         errors,
@@ -51,11 +50,11 @@ exports.validateLoginData = data => {
 
     if (isEmpty(data.password)) {
         errors.password = "Must not be empty";
-    };
+    }
 
     if (isEmpty(data.email)) {
         errors.email = "Must not be empty";
-    };
+    }
 
     return {
         errors,
@@ -67,12 +66,13 @@ exports.simplifyUserData = ({bio, website, location}) => {
     let userData = {}
     if (!isEmpty(bio)) userData.bio = bio;
     if (!isEmpty(website)) {
-        if (website.substring(0,4) == 'http') {
+        if (website.substring(0,4) === 'http') {
             userData.website= website;
         } else {
             userData.website = "https://" + website;
         }
-    };
+    }
+
     if (!isEmpty(location)) userData.location = location;
     return userData
 }

@@ -25,8 +25,6 @@ const FBAuth = require('./util/FBAuth.js');
 
 const express = require('express');
 const app = express();
-
-const firebase = require('firebase');
   // Your web app's Firebase configuration
   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
@@ -84,6 +82,53 @@ exports.createNotificationOnLike = functions.firestore.document(`likes/{id}`)
           type: "like",
           read: false
         })
+      } else {
+        return; // idk wtf to do
       }
     })
+    .then( () => {
+      return;
+    })
+    .catch( err => {
+      console.error(err);
+      return;
+    })
+});
+
+exports.deleteNotificationOnUnlike = functions.firestore.document(`likes/{id}`)
+.onDelete( snapshot => {
+  db.doc(`/notifications/${snapshot.id}`).delete()
+  .then( () => {
+    return;
   })
+  .catch( err=> {
+    console.error(err);
+    return;
+  })
+});
+
+exports.createNotificationOnComment = functions.firestore.document(`comments/{id}`)
+.onCreate( snapshot => {
+  db.doc(`/Jokes/${snapshot.data().jokeId}`).get()
+  .then(doc => {
+    if (doc.exists) {
+      return db.doc(`/notifications/${snapshot.id}`).set({
+        createdAt: new Date().toISOString,
+        receipient: doc.data().handle,
+        sender: snapshot.data().userHandle,
+        jokeId: snapshot.data().jokeId,
+        type: "comment",
+        read: false
+      })
+    } else {
+      return; // idk wtf to do
+    }
+  })
+  .then( () => {
+    return;
+  })
+  .catch( err=> {
+    console.error(err);
+    return;
+  })
+});
