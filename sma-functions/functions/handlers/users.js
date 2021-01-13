@@ -21,7 +21,7 @@ exports.signup = (req, res) => {
 
     // we also want to give them an image.
 
-    const noImg = 'no-img.png';
+    const noImg = 'no-img.jpg';
 
     const { errors, valid } = validateSignupData(newUser);
 

@@ -183,10 +183,10 @@ exports.unlikeJoke = (req, res) => {
             return res.status(404).json({ error: 'joke not found' });
         }
     })
-    .then( (data) => {
-        if (!data.empty) {
+    .then( (doc) => {
+        if (!doc.empty) {
             // if there a joke is actually liked; i want to remove this 
-            return db.collection('likes').doc(data.data().jokeId).delete()
+            return db.collection('likes').doc(doc.docs[0].data().jokeId).delete()
             .then(() => {
                 jokeData.likeCount--;
                 return jokeDocument.update({ likeCount: jokeData.likeCount });

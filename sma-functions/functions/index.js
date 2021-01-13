@@ -71,6 +71,7 @@ exports.api = functions.https.onRequest(app);
 
 exports.createNotificationOnLike = functions.firestore.document(`likes/{id}`)
   .onCreate( snapshot => {
+    console.log("something happened");
     db.doc(`/Jokes/${snapshot.data().jokeId}`).get()
     .then(doc => {
       if (doc.exists) {
@@ -81,11 +82,9 @@ exports.createNotificationOnLike = functions.firestore.document(`likes/{id}`)
           jokeId: snapshot.data().jokeId,
           type: "like",
           read: false
-        })
-      } else {
-        return; // idk wtf to do
+            })
       }
-    })
+      })
     .then( () => {
       return;
     })
