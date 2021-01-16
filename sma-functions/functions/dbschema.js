@@ -57,7 +57,7 @@ const comment = {
 
 const notifications = [
     {
-        receipient: 'user',
+        recipient: 'user',
         sender: 'otherUser',
         read: 'true | false',
         jokeId: 'alksdjflaawehkfjha ;el',

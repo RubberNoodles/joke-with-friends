@@ -128,13 +128,24 @@ exports.getUserData = (req, res) => {
             userData.credentials = doc.data(); // this just receives the data from uploadUserData
             return db.collection('likes').where('userHandle', '==', req.user.handle).get();
         } else {
-            return res.status(500).json({ documents: "Requested Firebasedocuments not found"});
+            return res.status(500).json({ documents: "Requested Documents not found"});
         }
     })
     .then( data => {
         userData.likes = [];
         data.forEach( jokeDoc => {
             userData.likes.push(jokeDoc.data());
+        })
+        return db.collection('notifications').where("recipient","==",req.user.handle)
+            .orderBy("timeCreated","desc").limit(10).get();
+    })
+    .then( data => {
+        userData.notifications = [];
+        data.forEach( notifDoc => {
+            userData.notifications.push({
+                ...notifDoc.data(),
+                notificationId: notifDoc.id
+            });
         })
         return res.json( userData );
     })
@@ -143,6 +154,34 @@ exports.getUserData = (req, res) => {
         return res.status(500).json({ error: err.code});
     });
     // some of the data is ez pz, but the likes are a bit more weird.
+};
+
+exports.getPublicUserData = (req, res) => {
+    let userData = {};
+
+    db.doc(`/users/${req.params.handle}`).get()
+    .then( doc => {
+        if (doc.exists) {
+            userData.user = doc.data();
+            return db.collection("Jokes")
+                .where("userHandle","==",req.params.handle)
+                .orderBy("timeCreated","desc")
+                .get();
+        } else {
+            return res.status(404).json({ error: "User not found"});
+        }
+    })
+    .then( data => {
+        userData.jokes = [];
+        data.forEach( jokeDoc => {
+            userData.jokes.push(jokeDoc.data());
+        })
+        return res.status(200).json(userData);
+    })
+    .catch( err => {
+        console.log(err);
+        return res.json({error: err.code})
+    })
 };
 
 exports.uploadImage = (req, res) => {
@@ -201,3 +240,22 @@ exports.uploadImage = (req, res) => {
     });
     busboy.end(req.rawBody);
 };
+
+exports.markNotificationAsRead = (req, res) => {
+    // body input data is going to be an array of seen notifications
+    // i'll just pretend like it's an array of id's and see where that goes
+    // ok so there was the idea 
+    const batch = db.batch();
+    req.body.forEach( notif => {
+        batch.update( db.collection('notifications').doc(notif), {"read" : true });
+    });
+    batch.commit().then( () => {
+        return res.status(200).json({ notifications: "Marked as read."});
+    })
+    .catch( err => {
+        console.error(err);
+        return req.status(404).json({ error: err.code });
+    });
+};
+
+// I want to try and implement an idea of "Groups" too.

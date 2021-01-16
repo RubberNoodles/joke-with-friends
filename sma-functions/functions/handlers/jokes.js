@@ -186,7 +186,7 @@ exports.unlikeJoke = (req, res) => {
     .then( (doc) => {
         if (!doc.empty) {
             // if there a joke is actually liked; i want to remove this 
-            return db.collection('likes').doc(doc.docs[0].data().jokeId).delete()
+            return doc.docs[0].ref.delete()
             .then(() => {
                 jokeData.likeCount--;
                 return jokeDocument.update({ likeCount: jokeData.likeCount });
@@ -195,7 +195,7 @@ exports.unlikeJoke = (req, res) => {
                 return res.json(jokeData);
             });
         } else {
-            return res.status(500).json({ error: "joke already unliked"})
+            return res.status(400).json({ error: "joke already unliked"})
         }
 
     })
@@ -231,6 +231,7 @@ exports.deleteJoke = (req, res) => {
     
     // Deal with the user's like count LATER?? WIP
 };
+
 /*
     
     }

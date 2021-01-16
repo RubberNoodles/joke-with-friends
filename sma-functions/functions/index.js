@@ -18,7 +18,9 @@ const {
   login, 
   uploadImage, 
   uploadUserData, 
-  getUserData } = require('./handlers/users.js');
+  getPublicUserData,
+  getUserData,
+  markNotificationAsRead } = require('./handlers/users.js');
 
 
 const FBAuth = require('./util/FBAuth.js');
@@ -33,57 +35,37 @@ const app = express();
 // GET method that receives all the jokes in the Jokes collection
 // First parameter is the directory, second is the handler
 app.get('/jokes', getAllJokes);
-
-// create a joke
-app.post('/joke', FBAuth, postOneJoke);
-
-// obtain a specific joke basaed on the id
-app.get('/joke/:jokeId', getJokeData);
-
-// comment on a specific joke
-app.post('/joke/:jokeId/comment', FBAuth, commentOnJoke);
-
+app.post('/joke', FBAuth, postOneJoke); // create a joke
+app.get('/joke/:jokeId', getJokeData); // obtain a specific joke based on the id
+app.post('/joke/:jokeId/comment', FBAuth, commentOnJoke); // comment on a specific joke
 // like or unlike a joke
 app.post('/joke/:jokeId/like', FBAuth, likeJoke);
 app.post('/joke/:jokeId/unlike', FBAuth, unlikeJoke);
-
-// delete joke
-app.delete('/joke/:jokeId', FBAuth, deleteJoke);
-
-// signup route
-app.post('/signup', signup);
-
-// login route
-app.post('/login', login);
-
-// upload more user data
-app.post('/user/data', FBAuth, uploadUserData);
-
-// get ALL the data on a single user
-app.get('/user/data', FBAuth, getUserData);
-
-// the only way of sending data through a get request is via the url.
-
-// uploading an image (as profile picture?)
-app.post('/user/image', FBAuth, uploadImage);
+app.delete('/joke/:jokeId', FBAuth, deleteJoke); // delete joke
+app.post('/signup', signup); // signup for an account, uses firebase Auth
+app.post('/login', login); // login route
+app.post('/user/data', FBAuth, uploadUserData); // upload more user data
+app.get('/user/data', FBAuth, getUserData); // get ALL the data on a single user
+app.get('/user/:handle', getPublicUserData); // for people who just want to access a certain person's profile; gets all the profile data
+app.post('/user/image', FBAuth, uploadImage); // uploading an image (as profile picture?) 
+app.post('/notification', FBAuth, markNotificationAsRead);// reading  notifications
 
 exports.api = functions.https.onRequest(app);
 
 exports.createNotificationOnLike = functions.firestore.document(`likes/{id}`)
   .onCreate( snapshot => {
-    console.log("something happened");
     db.doc(`/Jokes/${snapshot.data().jokeId}`).get()
     .then(doc => {
       if (doc.exists) {
         return db.doc(`/notifications/${snapshot.id}`).set({
-          createdAt: new Date().toISOString,
-          receipient: doc.data().handle,
+          createdAt: new Date().toISOString(),
+          recipient: doc.data().handle,
           sender: snapshot.data().userHandle,
           jokeId: snapshot.data().jokeId,
           type: "like",
           read: false
             })
-      }
+          }
       })
     .then( () => {
       return;
@@ -112,8 +94,8 @@ exports.createNotificationOnComment = functions.firestore.document(`comments/{id
   .then(doc => {
     if (doc.exists) {
       return db.doc(`/notifications/${snapshot.id}`).set({
-        createdAt: new Date().toISOString,
-        receipient: doc.data().handle,
+        createdAt: new Date().toISOString(),
+        recipient: doc.data().handle,
         sender: snapshot.data().userHandle,
         jokeId: snapshot.data().jokeId,
         type: "comment",
