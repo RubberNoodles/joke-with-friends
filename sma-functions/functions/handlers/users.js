@@ -70,7 +70,8 @@ exports.signup = (req, res) => {
                 return res.status(400).json({password: "Strength: too weak"});
             }
             console.error(err)
-            return res.status(500).json({server: err.code})
+            return res.status(500).json({server: err.code}) // Later I want to show 
+            // something like "Something went Wrong" this on the front end.
         });
     };
 
@@ -246,8 +247,9 @@ exports.markNotificationAsRead = (req, res) => {
     // i'll just pretend like it's an array of id's and see where that goes
     // ok so there was the idea 
     const batch = db.batch();
-    req.body.forEach( notif => {
-        batch.update( db.collection('notifications').doc(notif), {"read" : true });
+    req.body.forEach( notifId => {
+        // If I wanted I could also reassign some const variable with the appropriate document over and over again.
+        batch.update( db.collection('notifications').doc(notifId), {"read" : true });
     });
     batch.commit().then( () => {
         return res.status(200).json({ notifications: "Marked as read."});

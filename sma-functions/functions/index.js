@@ -56,7 +56,7 @@ exports.createNotificationOnLike = functions.firestore.document(`likes/{id}`)
   .onCreate( snapshot => {
     db.doc(`/Jokes/${snapshot.data().jokeId}`).get()
     .then(doc => {
-      if (doc.exists) {
+      if (doc.exists && doc.data().userHandle != snapshot.data().userHandle) {
         return db.doc(`/notifications/${snapshot.id}`).set({
           createdAt: new Date().toISOString(),
           recipient: doc.data().handle,
@@ -67,9 +67,6 @@ exports.createNotificationOnLike = functions.firestore.document(`likes/{id}`)
             })
           }
       })
-    .then( () => {
-      return;
-    })
     .catch( err => {
       console.error(err);
       return;
@@ -78,10 +75,7 @@ exports.createNotificationOnLike = functions.firestore.document(`likes/{id}`)
 
 exports.deleteNotificationOnUnlike = functions.firestore.document(`likes/{id}`)
 .onDelete( snapshot => {
-  db.doc(`/notifications/${snapshot.id}`).delete()
-  .then( () => {
-    return;
-  })
+  return db.doc(`/notifications/${snapshot.id}`).delete()
   .catch( err=> {
     console.error(err);
     return;
@@ -90,9 +84,9 @@ exports.deleteNotificationOnUnlike = functions.firestore.document(`likes/{id}`)
 
 exports.createNotificationOnComment = functions.firestore.document(`comments/{id}`)
 .onCreate( snapshot => {
-  db.doc(`/Jokes/${snapshot.data().jokeId}`).get()
+  return db.doc(`/Jokes/${snapshot.data().jokeId}`).get()
   .then(doc => {
-    if (doc.exists) {
+    if (doc.exists && doc.data().userHandle != snapshot.data().userHandle) {
       return db.doc(`/notifications/${snapshot.id}`).set({
         createdAt: new Date().toISOString(),
         recipient: doc.data().handle,
@@ -102,11 +96,9 @@ exports.createNotificationOnComment = functions.firestore.document(`comments/{id
         read: false
       })
     } else {
+      console.error("Error: File not found")
       return; // idk wtf to do
     }
-  })
-  .then( () => {
-    return;
   })
   .catch( err=> {
     console.error(err);
