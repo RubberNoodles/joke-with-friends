@@ -105,3 +105,21 @@ exports.createNotificationOnComment = functions.firestore.document(`comments/{id
     return;
   })
 });
+
+exports.changePictureOnUserUpdate = functions.firestore.document(`users/{handle}`)
+.onUpdate( change => {
+  const batch = db.batch();
+  if (change.before.data().imageUrl !== change.after.data().imageUrl) {
+    return db.collection(`Jokes`).where("handle","==",change.before.data().handle).get()
+    .then( data => {
+      data.forEach(doc => {
+        batch.update(doc.ref, {"imageUrl": change.after.data().imageUrl});
+      })
+      return batch.commit();
+    })
+    .catch( err => {
+      console.error(err);
+      return;
+    })
+  }
+})
