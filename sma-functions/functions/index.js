@@ -110,16 +110,52 @@ exports.changePictureOnUserUpdate = functions.firestore.document(`users/{handle}
 .onUpdate( change => {
   const batch = db.batch();
   if (change.before.data().imageUrl !== change.after.data().imageUrl) {
-    return db.collection(`Jokes`).where("handle","==",change.before.data().handle).get()
-    .then( data => {
+    return db.collection(`Jokes`)
+      .where("handle","==",change.before.data().handle)
+      .get()
+      .then( data => {
       data.forEach(doc => {
         batch.update(doc.ref, {"imageUrl": change.after.data().imageUrl});
       })
       return batch.commit();
     })
-    .catch( err => {
+      .catch( err => {
       console.error(err);
       return;
     })
   }
-})
+});
+
+exports.deleteDataOnJokeDelete = functions.firestore.document(`Jokes/{jokeId}`)
+  .onDelete( (snapshot, context) => {
+    const batch = db.batch();
+    return db.collections("comments")
+      .where("jokeId", "==",context.params.jokeId)
+      .get()
+      .then( data => {
+        data.forEach( doc => {
+          batch.delete(doc.ref);
+        });
+        return db.collections("likes")
+          .where("jokeId","==", context.params.jokeId)
+          .get();
+      })
+      .then( data => {
+        data.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        return db.collections("notifications")
+          .where("jokeId","==", context.params.jokeId)
+          .get();
+      })
+      .then( data => {
+        data.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        return batch.commit();        
+      })
+      .catch( err => {
+        console.error(err);
+      })
+      })
+  

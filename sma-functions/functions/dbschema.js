@@ -65,3 +65,8 @@ const notifications = [
         createdAt: 'theISOSTRING DATE thing'
 }
 ]
+
+const likes = {
+    jokeId: "aldkjfaljef";
+    userHandle: "user";
+}
