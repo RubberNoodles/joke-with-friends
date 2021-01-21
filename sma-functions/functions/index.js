@@ -129,14 +129,14 @@ exports.changePictureOnUserUpdate = functions.firestore.document(`users/{handle}
 exports.deleteDataOnJokeDelete = functions.firestore.document(`Jokes/{jokeId}`)
   .onDelete( (snapshot, context) => {
     const batch = db.batch();
-    return db.collections("comments")
+    return db.collection("comments")
       .where("jokeId", "==",context.params.jokeId)
       .get()
       .then( data => {
         data.forEach( doc => {
           batch.delete(doc.ref);
         });
-        return db.collections("likes")
+        return db.collection("likes")
           .where("jokeId","==", context.params.jokeId)
           .get();
       })
@@ -144,7 +144,7 @@ exports.deleteDataOnJokeDelete = functions.firestore.document(`Jokes/{jokeId}`)
         data.forEach(doc => {
           batch.delete(doc.ref);
         });
-        return db.collections("notifications")
+        return db.collection("notifications")
           .where("jokeId","==", context.params.jokeId)
           .get();
       })
@@ -157,5 +157,5 @@ exports.deleteDataOnJokeDelete = functions.firestore.document(`Jokes/{jokeId}`)
       .catch( err => {
         console.error(err);
       })
-      })
+});
   
