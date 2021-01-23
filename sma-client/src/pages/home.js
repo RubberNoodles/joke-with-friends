@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import Joke from "../components/Joke";
 
 function Home() {
     const [jokeData, setJokeData] = useState([]);
@@ -21,7 +21,7 @@ function Home() {
         // AND THEN push it to the react Hook state variable thing?
         // because constantly doing the setJokeData is kind of bad. 
         data.forEach( joke => {
-            tempJokeArray.push({id: joke.jokeId, body: joke.body});
+            tempJokeArray.push({...joke});
         });
         return setJokeData(tempJokeArray);
     })
@@ -31,7 +31,7 @@ function Home() {
     }, []);   
 
     let jokeDataMarkup = jokeData.length !== 0 
-        ? (jokeData.map( doc => <p key={doc.id}> {doc.body} </p>))
+        ? (jokeData.map( doc => <Joke key={doc.jokeId} joke = {doc}/>))
         : (<p> Loading... </p>);
 
     return (

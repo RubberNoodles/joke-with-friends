@@ -1,6 +1,6 @@
 import React from 'react';
 
-function play() {
+function Play() {
     return (
         <div>
             Start Playing
@@ -8,4 +8,4 @@ function play() {
     )
 }
 
-export default play
+export default Play
