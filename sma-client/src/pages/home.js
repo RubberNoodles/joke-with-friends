@@ -1,0 +1,44 @@
+import React, { useState, useEffect } from 'react';
+
+
+function Home() {
+    const [jokeData, setJokeData] = useState([]);
+    // figured out fetch, it's return res.json(), then there's another promise
+    // with a data variable. The issue?
+    // react doesn't like objects as their states. Something about them
+    // being changeable?
+    // Also there's the issue with doing just an array huh.
+    
+
+    useEffect (() => {
+    fetch('https://us-central1-social-media-6297e.cloudfunctions.net/api/jokes')
+    .then( res => {
+        return res.json();
+    })
+    .then( data => {
+        const tempJokeArray = []; // COOL OK
+        // so the strategy is to get an array of the entire object
+        // AND THEN push it to the react Hook state variable thing?
+        // because constantly doing the setJokeData is kind of bad. 
+        data.forEach( joke => {
+            tempJokeArray.push({id: joke.jokeId, body: joke.body});
+        });
+        return setJokeData(tempJokeArray);
+    })
+    .catch( err => {
+        console.error(err);
+    });// eslint-disable-next-line
+    }, []);   
+
+    let jokeDataMarkup = jokeData.length !== 0 
+        ? (jokeData.map( doc => <p key={doc.id}> {doc.body} </p>))
+        : (<p> Loading... </p>);
+
+    return (
+        <div>
+            Hahaasdflk ajelfjsf lkj {jokeDataMarkup}
+        </div>
+    )
+}
+
+export default Home
