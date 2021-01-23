@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Joke from "../components/Joke";
 
+// MUI imports
+
+import Grid from "@material-ui/core/Grid";
+
 function Home() {
     const [jokeData, setJokeData] = useState([]);
     // figured out fetch, it's return res.json(), then there's another promise
@@ -35,9 +39,14 @@ function Home() {
         : (<p> Loading... </p>);
 
     return (
-        <div>
-            Hahaasdflk ajelfjsf lkj {jokeDataMarkup}
-        </div>
+        <Grid container spacing={2}>
+            <Grid item sm={6}>
+            {jokeDataMarkup}<br/>
+            </Grid>
+            <Grid item sm={6}>
+            Hahaasdflk ajelfjsf lkj 
+            </Grid>
+        </Grid>
     )
 }
 
