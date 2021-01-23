@@ -42,13 +42,13 @@ function Home() {
         <Grid spacing={2} container> 
             <Grid 
                 container 
-                spacing={2} 
-                sm={6} // interesting, it only worked when Grid was a container
+                spacing={2}
+                sm={9} // interesting, it only worked when Grid was a container
                 direction="row" // I was trying to get the cards to automatically fill in
                 justify="flex-start"
                 alignItems="flex-start">             
             {jokeDataMarkup} </Grid>
-            <Grid item sm={6}>
+            <Grid item sm={3}>
             Hahaasdflk ajelfjsf lkj 
             </Grid>
         </Grid>
