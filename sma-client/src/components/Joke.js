@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 // MUI Themes
 import { makeStyles } from '@material-ui/styles';
@@ -6,12 +7,13 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
+import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 
 const useStyles = makeStyles({
     root: {
-        minWidth: 275
+        minWidth: 150
     },
     title: {
         fontSize: 18
@@ -28,10 +30,13 @@ function Joke(props) {
     const classes = useStyles();
 
     return (
+    <Grid item sm={6}>
     <Card>
     <CardContent>
         <Typography className={classes.title}> 
-            {props.joke.handle}'s Joke!
+            <Typography component={Link} to={`user/${props.joke.handle}`}>
+                {props.joke.handle}
+            </Typography>'s Joke!
         </Typography>
     </CardContent>
     <CardMedia
@@ -43,9 +48,14 @@ function Joke(props) {
         <Typography> {props.joke.body} </Typography>
     </CardContent>
     <CardActions>
-        <Button color="primary"> See More</Button>
+        <Button 
+            component = {Link}
+            to = {`joke/${props.joke.jokeId}`}
+            color="primary"
+            > See More</Button>
     </CardActions>
     </Card>
+    </Grid>
     )
 }
 
