@@ -100,7 +100,13 @@ exports.login = (req, res) => {
         .catch((err)=>{
             console.error(err);
             if (err.code === "auth/wrong-password") {
-                return res.status(403).json({general: "Wrong Credentials, please try again"}); // 403 is unauthorized
+                return res.status(403).json({email: "Error, email/password not found", password: "Error, email/password not found"}); // 403 is unauthorized
+            }
+            else if (err.code === "auth/invalid-email") {
+                return res.status(403).json({email: "Please enter a valid email"});
+            }
+            else if (err.code === "auth/user-not-found") {
+                return res.status(403).json({email: "Error, email/password not found", password: "Error, email/password not found"}); // 403 is unauthorized
             }
             return res.status(500).json({error: err.code});
         });
@@ -195,12 +201,14 @@ exports.uploadImage = (req, res) => {
     let imageToBeUploaded;
     
     const busboy = new BusBoy({ headers: req.headers });
+    // where do we start importing the images again? I forget lmao
+    // I'm guessing it's req.headers that contains the image tho hmm
 
     busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
 
         // we want to prevent bad mimetypes
         if (mimetype !== 'image/jpeg' && mimetype !== 'image/png') {
-            return res.staatus(400).json({error: "Wrong file type submitted"});
+            return res.status(400).json({error: "Wrong file type submitted"});
         }
         // given image.png, we want the .png file.
         const imageExtension = filename.split('.').slice(-1)[0]; // i.e. .png, .jpg
