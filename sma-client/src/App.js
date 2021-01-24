@@ -8,6 +8,9 @@ import Navbar from './components/Navbar';
 import jwtDecode from 'jwt-decode';
 import AuthRoute from './util/AuthRoute.js';
 
+// redux imports
+import { Provider } from 'react-redux';
+import store from './redux/store';
 // MUI imports, for theme
 import { createMuiTheme, makeStyles, ThemeProvider } from '@material-ui/core/styles';
 import { purple, green } from '@material-ui/core/colors';
@@ -47,9 +50,9 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <BrowserRouter>
+    <Provider store={store}>
       <ThemeProvider theme = {theme}>
+      <BrowserRouter>
       <Navbar />
       <div className="container">
         <Switch>
@@ -59,9 +62,9 @@ function App() {
           <Route exact path="/play" component={Play}/>
         </Switch>
       </div>
-      </ThemeProvider>
       </BrowserRouter>
-    </div>
+      </ThemeProvider>
+    </Provider>
   );
 }
 
