@@ -41,6 +41,7 @@ function Home() {
     return (
         <Grid spacing={2} container>
             <Grid
+                item
                 container
                 spacing={2}
                 sm={9} // interesting, it only worked when Grid was a container

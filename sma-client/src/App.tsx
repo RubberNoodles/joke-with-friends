@@ -6,7 +6,7 @@ import Login from './pages/login';
 import Play from './pages/play';
 import Navbar from './components/Navbar';
 import jwtDecode, { JwtPayload } from 'jwt-decode';
-import AuthRoute from './util/AuthRoute.js';
+import AuthRoute from './util/AuthRoute';
 
 // MUI imports, for theme
 import { createMuiTheme, makeStyles, ThemeProvider } from '@material-ui/core/styles';
@@ -34,9 +34,11 @@ function App() {
         const decodedToken = jwtDecode<JwtPayload>(token);
         console.log(decodedToken);
         // this code is HORRIBLE 
-        // if the exp could be undefined, we just replace it with 100000000 
-        // this basically means an undefined expiration will never expire.
-        if ((decodedToken.exp || 100000000) * 1000 < Date.now()) {
+        // if the exp could be undefined, we just replace it with 0
+        // this basically means an undefined expiration will expire
+        if ((decodedToken.exp || 0) * 1000 < Date.now()) {
+            // delete the current token to prevent an infinite loop
+            localStorage.removeItem('FBItem');
             window.location.href = '/login';
             authenticated = false;
         } else {

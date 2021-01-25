@@ -8,6 +8,10 @@ import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 
 
+// other imports
+import laughSVG from '../components/laugh.svg';
+
+
 const padding = 20;
 function Signup() {
     const [errors, setErrors] = useState({ email: '', password: '', confirmPassword: '', handle: '' });
@@ -76,7 +80,7 @@ function Signup() {
                         justify="center"
                         alignItems="center"
                     >
-                        <img src="../components/laugh.svg" />
+                        <img src={laughSVG} />
                         <div style={{ height: padding }} />
                         <TextField
                             label="Email"

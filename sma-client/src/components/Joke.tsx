@@ -15,6 +15,10 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 
+// other imports
+import laughSVG from './laugh.svg';
+
+
 const useStyles = makeStyles({
     root: {
         minWidth: 150
@@ -90,7 +94,7 @@ const Joke: React.FC<JokeProps> = ({ joke }) => {
 
                     <CommentButton />
                     <IconButton>
-                        <img src="./laugh.svg" />
+                        <img src={laughSVG} />
                     </IconButton>
                 </CardActions>
             </Card>
