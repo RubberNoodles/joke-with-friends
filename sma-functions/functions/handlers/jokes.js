@@ -8,19 +8,19 @@ exports.getAllJokes = (request, response) => {
         .orderBy('timeCreated', 'desc') // descending order; i think .get is basically a request (oh its the method?)
         .get()
         .then(data => {
-        let jokes = [];
-        data.forEach(doc => {
-            jokes.push({
-                jokeId: doc.id,
-                ...doc.data(),
+            let jokes = [];
+            data.forEach(doc => {
+                jokes.push({
+                    jokeId: doc.id,
+                    ...doc.data(),
                 });
+            });
+            return response.json(jokes); // I guess the response parameter is just the thing we have to edit?
+        })
+        .catch(err => {
+            console.error(err);
+            return response.status(500).json({ error: err.code });
         });
-        return response.json(jokes); // I guess the response parameter is just the thing we have to edit?
-    })
-    .catch(err => {
-        console.error(err);
-        return response.status(500).json({error: err.code});
-    });
 };
 
 exports.postOneJoke = (req, res) => {
@@ -29,7 +29,7 @@ exports.postOneJoke = (req, res) => {
         handle: req.user.handle,
         timeCreated: new Date().toISOString(),
         imageUrl: req.user.imageUrl,
-        commentCount:0,
+        commentCount: 0,
         likeCount: 0,
     };
 
@@ -42,48 +42,48 @@ exports.postOneJoke = (req, res) => {
         })
         .catch(err => {
             console.error(err);
-            return es.status(500).json( {error: "Some issue"});
+            return es.status(500).json({ error: "Some issue" });
         })
 };
 
-exports.getJokeData = (req,res) => {
+exports.getJokeData = (req, res) => {
     // gets all the data aabout the joke, and then also the data w.r.t to the comments
     let jokeData;
     const jokeId = req.params.jokeId.trim(); // quick rename
     db.doc(`Jokes/${jokeId}`).get()
-    .then( doc => {
-        if (doc.exists) {
-            jokeData = doc.data();
-            jokeData.jokeId = doc.id;
-            return;
-        } else {
-            return res.status(404).json({error: `Joke with id ${jokeId} not found`})
-        }
-    })
-    .catch( err => {
-        console.error(err);
-        return res.status(500).json({ error: err.code });
-    });
+        .then(doc => {
+            if (doc.exists) {
+                jokeData = doc.data();
+                jokeData.jokeId = doc.id;
+                return;
+            } else {
+                return res.status(404).json({ error: `Joke with id ${jokeId} not found` })
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({ error: err.code });
+        });
 
     db.collection('comments')
-    .orderBy('timeCreated','desc')
-    .where("jokeId","==",jokeId)
-    .get()
-    .then(data => {
-        jokeData.comments = [];
-        data.forEach( doc => {
-            jokeData.comments.push(doc.data());
+        .orderBy('timeCreated', 'desc')
+        .where("jokeId", "==", jokeId)
+        .get()
+        .then(data => {
+            jokeData.comments = [];
+            data.forEach(doc => {
+                jokeData.comments.push(doc.data());
+            });
+            return res.status(200).json(jokeData)
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(400).json({ error: err.code });
         });
-        return res.status(200).json(jokeData)
-    })
-    .catch(err => {
-        console.error(err);
-        return res.status(400).json({ error: err.code });
-    });
 };
 
 exports.commentOnJoke = (req, res) => {
-    if (req.body.body.trim() === '') return res.status(400).json({body: "Must not be empty"});
+    if (req.body.body.trim() === '') return res.status(400).json({ body: "Must not be empty" });
     const newComment = {
         jokeId: req.params.jokeId.trim(),
         timeCreated: new Date().toISOString(),
@@ -93,147 +93,147 @@ exports.commentOnJoke = (req, res) => {
     };
 
     db.doc(`Jokes/${req.params.jokeId}`).get()
-    .then( (doc) => {
-        if (doc.exists) {
-            return doc.ref.update({ commentCount: doc.data().commentCount + 1 }); // .ref is a new function woah
-        } else {
-            return res.status(400).json({ error: "joke not found" });
-        }
-    })
-    .then( () => {
-        return db.collection('comments').add(newComment);
-    })
-    .then( doc => {
-        return res.status(200).json(newComment);
-    })
-    .catch( err => {
-        console.error(err);
-        return res.json({ error: err.code });
-    });
+        .then((doc) => {
+            if (doc.exists) {
+                return doc.ref.update({ commentCount: doc.data().commentCount + 1 }); // .ref is a new function woah
+            } else {
+                return res.status(400).json({ error: "joke not found" });
+            }
+        })
+        .then(() => {
+            return db.collection('comments').add(newComment);
+        })
+        .then(doc => {
+            return res.status(200).json(newComment);
+        })
+        .catch(err => {
+            console.error(err);
+            return res.json({ error: err.code });
+        });
 };
 
 exports.likeJoke = (req, res) => {
     const likeDocument = db
-      .collection('likes')
-      .where('userHandle', '==', req.user.handle)
-      .where('jokeId', '==', req.params.jokeId)
-      .limit(1);
-  
+        .collection('likes')
+        .where('userHandle', '==', req.user.handle)
+        .where('jokeId', '==', req.params.jokeId)
+        .limit(1);
+
     const jokeDocument = db.doc(`/Jokes/${req.params.jokeId}`);
-  
+
     let jokeData;
-  
+
     jokeDocument
-      .get()
-      .then((doc) => {
-        if (doc.exists) {
-          jokeData = doc.data();
-          jokeData.jokeId = doc.id;
-          return likeDocument.get();
-        } else {
-          return res.status(404).json({ error: 'joke not found' });
-        }
-      })
-      .then((data) => {
-        if (data.empty) {
-          return db
-            .collection('likes')
-            .add({
-              jokeId: req.params.jokeId,
-              userHandle: req.user.handle
-            })
-            .then(() => {
-              jokeData.likeCount++;
-              return jokeDocument.update({ likeCount: jokeData.likeCount });
-            })
-            .then(() => {
-              return res.json(jokeData);
-            });
-        } else {
-          return res.status(400).json({ error: 'joke already liked' });
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        res.status(500).json({ error: err.code });
-      });
-  };
+        .get()
+        .then((doc) => {
+            if (doc.exists) {
+                jokeData = doc.data();
+                jokeData.jokeId = doc.id;
+                return likeDocument.get();
+            } else {
+                return res.status(404).json({ error: 'joke not found' });
+            }
+        })
+        .then((data) => {
+            if (data.empty) {
+                return db
+                    .collection('likes')
+                    .add({
+                        jokeId: req.params.jokeId,
+                        userHandle: req.user.handle
+                    })
+                    .then(() => {
+                        jokeData.likeCount++;
+                        return jokeDocument.update({ likeCount: jokeData.likeCount });
+                    })
+                    .then(() => {
+                        return res.json(jokeData);
+                    });
+            } else {
+                return res.status(400).json({ error: 'joke already liked' });
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).json({ error: err.code });
+        });
+};
 
 
 exports.unlikeJoke = (req, res) => {
     const likeDocument = db
-      .collection('likes')
-      .where('userHandle', '==', req.user.handle)
-      .where('jokeId', '==', req.params.jokeId)
-      .limit(1);
-  
+        .collection('likes')
+        .where('userHandle', '==', req.user.handle)
+        .where('jokeId', '==', req.params.jokeId)
+        .limit(1);
+
     const jokeDocument = db.doc(`/Jokes/${req.params.jokeId}`);
 
     let jokeData;
 
     // pathway: get data from the joke document => if 
-    
-    jokeDocument.get() // yes, always remember to check if a doc exists
-    .then( (doc) => {
-        if (doc.exists) {
-            jokeData = doc.data();
-            jokeData.jokeId = doc.id;
-            return likeDocument.get();
-        } else {
-            return res.status(404).json({ error: 'joke not found' });
-        }
-    })
-    .then( (doc) => {
-        if (!doc.empty) {
-            // if there a joke is actually liked; i want to remove this 
-            return doc.docs[0].ref.delete()
-            .then(() => {
-                jokeData.likeCount--;
-                return jokeDocument.update({ likeCount: jokeData.likeCount });
-            })
-            .then(() => {
-                return res.json(jokeData);
-            });
-        } else {
-            return res.status(400).json({ error: "joke already unliked"})
-        }
 
-    })
-    .catch( err => {
-        console.error(err);
-        return res.json({ error: err.code });
-    });
+    jokeDocument.get() // yes, always remember to check if a doc exists
+        .then((doc) => {
+            if (doc.exists) {
+                jokeData = doc.data();
+                jokeData.jokeId = doc.id;
+                return likeDocument.get();
+            } else {
+                return res.status(404).json({ error: 'joke not found' });
+            }
+        })
+        .then((doc) => {
+            if (!doc.empty) {
+                // if there a joke is actually liked; i want to remove this 
+                return doc.docs[0].ref.delete()
+                    .then(() => {
+                        jokeData.likeCount--;
+                        return jokeDocument.update({ likeCount: jokeData.likeCount });
+                    })
+                    .then(() => {
+                        return res.json(jokeData);
+                    });
+            } else {
+                return res.status(400).json({ error: "joke already unliked" })
+            }
+
+        })
+        .catch(err => {
+            console.error(err);
+            return res.json({ error: err.code });
+        });
 };
 
 exports.deleteJoke = (req, res) => {
     let likeNumber;
     //check if the joke was made by the user.
     db.doc(`Jokes/${req.params.jokeId}`).get()
-    .then( doc => {
-        if (doc.exists) {
-            if (req.user.handle == doc.data().handle) {
-                likeNumber = doc.data().likeCount;
-                return doc.ref.delete();
+        .then(doc => {
+            if (doc.exists) {
+                if (req.user.handle == doc.data().handle) {
+                    likeNumber = doc.data().likeCount;
+                    return doc.ref.delete();
+                } else {
+                    return res.status(400).json({ error: "Not Authorized" });
+                }
             } else {
-                return res.status(400).json({ error: "Not Authorized"});
-            } 
-        } else {
-            return res.status(500).json({ error: "Document not found"});
-        }
-    })
-    .then(() => {
-        return res.json({ delete: "Joke was not funny, so it was deleted"});
-    })
-    .catch( err => {
-        console.error(err);
-        return res.status(500).json({ error: err.code });
-    });
-    
+                return res.status(500).json({ error: "Document not found" });
+            }
+        })
+        .then(() => {
+            return res.json({ delete: "Joke was not funny, so it was deleted" });
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({ error: err.code });
+        });
+
     // Deal with the user's like count LATER?? WIP
 };
 
 /*
-    
+
     }
     const jokeId = req.params.jokeId.trim();
     const likeData = {

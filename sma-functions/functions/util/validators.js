@@ -1,5 +1,5 @@
 /* eslint-disable no-useless-escape */
-const isEmpty =(string) => {
+const isEmpty = (string) => {
     if (string.trim() === '') {
         return true;
     } else {
@@ -62,12 +62,12 @@ exports.validateLoginData = data => {
     };
 };
 
-exports.simplifyUserData = ({bio, website, location}) => {
+exports.simplifyUserData = ({ bio, website, location }) => {
     let userData = {}
     if (!isEmpty(bio)) userData.bio = bio;
     if (!isEmpty(website)) {
-        if (website.substring(0,4) === 'http') {
-            userData.website= website;
+        if (website.substring(0, 4) === 'http') {
+            userData.website = website;
         } else {
             userData.website = "https://" + website;
         }
