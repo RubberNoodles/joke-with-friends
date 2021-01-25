@@ -5,7 +5,11 @@ import axios from 'axios';
 import IconButton from '@material-ui/core/IconButton';
 import { Favorite, RadioButtonChecked } from '@material-ui/icons';
 
-function LikeButton(props) {
+interface LikeBtnProps {
+    isLiked?: boolean;
+    id: string
+}
+const LikeButton: React.FC<LikeBtnProps> = (props) => {
 
     const onLikeClick = () => {
         /*
@@ -20,12 +24,9 @@ function LikeButton(props) {
     }
 
     return (
-        <IconButton onClick = {onLikeClick}>
-            { props.isLiked || false ? <RadioButtonChecked/> 
-            : ( <Favorite/>)
-            }
+        <IconButton onClick={onLikeClick}>
+            { props.isLiked || false ? <RadioButtonChecked /> : (<Favorite />)}
         </IconButton>
-        
     )
 };
 
