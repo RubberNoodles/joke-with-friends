@@ -24,6 +24,7 @@ const {
 
 
 const FBAuth = require('./util/FBAuth.js');
+const cors = require('cors');
 
 const express = require('express');
 const app = express();
@@ -32,8 +33,10 @@ const app = express();
 
 // joke routes
 
+app.use(cors());
 // GET method that receives all the jokes in the Jokes collection
 // First parameter is the directory, second is the handler
+
 app.get('/jokes', getAllJokes);
 app.post('/joke', FBAuth, postOneJoke); // create a joke
 app.get('/joke/:jokeId', getJokeData); // obtain a specific joke based on the id

@@ -37,14 +37,14 @@ function App() {
   let authenticated = false;
 
   const token = localStorage.FBItem;
-
+  console.log(token);
   if (token) {
     const decodedToken = jwtDecode(token);
     console.log(decodedToken);
     if (decodedToken.exp * 1000 < Date.now()) {
       window.location = '/login';
       authenticated = false;
-    }  else {
+    } else {
       authenticated = true;
     }
   };
@@ -64,7 +64,7 @@ function App() {
       </div>
       </BrowserRouter>
       </ThemeProvider>
-    </Provider>
+    </Provider> 
   );
 }
 
