@@ -172,7 +172,7 @@ exports.getPublicUserData = (req, res) => {
             userData.user = doc.data();
             return db.collection("Jokes")
                 .where("userHandle","==",req.params.handle)
-                .orderBy("timeCreated","desc")
+                .orderBy("timeCreated","desc") 
                 .get();
         } else {
             return res.status(404).json({ error: "User not found"});
