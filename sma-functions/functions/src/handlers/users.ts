@@ -1,14 +1,15 @@
 // File for dealing with authentication of users: signup, login
-const { admin, db } = require('../util/admin');
+import { admin, db } from '../util/admin';
 
-const config = require('../util/config');
-const firebase = require('firebase');
+import config from '../util/config';
+import firebase from 'firebase';
 
 firebase.initializeApp(config);
 
 // helper handlers/functions
 
-const { validateSignupData, validateLoginData, simplifyUserData } = require('../util/validators.js');
+import { validateSignupData, validateLoginData, simplifyUserData } from '../util/validators';
+
 
 
 exports.signup = (req, res) => {

@@ -1,18 +1,21 @@
 /* eslint-disable eqeqeq */
 // Things that have to do with handling jokes. Atm you can make a joke, and get all the jokes.
-const { db } = require('../util/admin');
+import { db } from './../util/admin';
+import { Joke, JokeNoID } from './../types';
 
-exports.getAllJokes = (request, response) => {
+const getAllJokes = (request: any, response: any) => {
     // https://firebase.google.com/docs/firestore/query-data/get-data for helpful documentation
     db.collection('Jokes')
         .orderBy('timeCreated', 'desc') // descending order; i think .get is basically a request (oh its the method?)
         .get()
         .then(data => {
-            let jokes = [];
+            let jokes: Joke[] = [];
             data.forEach(doc => {
+                // there must be a better way to get typesafe firebase requests
+                let joke: JokeNoID = doc.data() as JokeNoID;
                 jokes.push({
+                    ...joke,
                     jokeId: doc.id,
-                    ...doc.data(),
                 });
             });
             return response.json(jokes); // I guess the response parameter is just the thing we have to edit?
@@ -23,8 +26,8 @@ exports.getAllJokes = (request, response) => {
         });
 };
 
-exports.postOneJoke = (req, res) => {
-    const newJoke = {
+const postOneJoke = (req: any, res: any) => {
+    let newJoke: JokeNoID = {
         body: req.body.body,
         handle: req.user.handle,
         timeCreated: new Date().toISOString(),
@@ -36,17 +39,18 @@ exports.postOneJoke = (req, res) => {
     db.collection('Jokes')
         .add(newJoke) // add will create a random id, while set will give us the name of an id.
         .then(doc => {
-            const resJoke = newJoke;
-            resJoke.jokeId = doc.id;
-            return res.json(resJoke);
+            return res.json({
+                ...newJoke,
+                jokeId: doc.id
+            });
         })
         .catch(err => {
             console.error(err);
-            return es.status(500).json({ error: "Some issue" });
+            return res.status(500).json({ error: "Some issue" });
         })
 };
 
-exports.getJokeData = (req, res) => {
+const getJokeData = (req: any, res: any) => {
     // gets all the data aabout the joke, and then also the data w.r.t to the comments
     let jokeData;
     const jokeId = req.params.jokeId.trim(); // quick rename
@@ -82,7 +86,7 @@ exports.getJokeData = (req, res) => {
         });
 };
 
-exports.commentOnJoke = (req, res) => {
+const commentOnJoke = (req: any, res: any) => {
     if (req.body.body.trim() === '') return res.status(400).json({ body: "Must not be empty" });
     const newComment = {
         jokeId: req.params.jokeId.trim(),
@@ -112,7 +116,7 @@ exports.commentOnJoke = (req, res) => {
         });
 };
 
-exports.likeJoke = (req, res) => {
+const likeJoke = (req: any, res: any) => {
     const likeDocument = db
         .collection('likes')
         .where('userHandle', '==', req.user.handle)
@@ -160,7 +164,7 @@ exports.likeJoke = (req, res) => {
 };
 
 
-exports.unlikeJoke = (req, res) => {
+const unlikeJoke = (req: any, res: any) => {
     const likeDocument = db
         .collection('likes')
         .where('userHandle', '==', req.user.handle)
@@ -205,7 +209,7 @@ exports.unlikeJoke = (req, res) => {
         });
 };
 
-exports.deleteJoke = (req, res) => {
+const deleteJoke = (req: any, res: any) => {
     let likeNumber;
     //check if the joke was made by the user.
     db.doc(`Jokes/${req.params.jokeId}`).get()
@@ -283,3 +287,13 @@ exports.deleteJoke = (req, res) => {
     })
 };
 */
+
+export {
+    getAllJokes,
+    postOneJoke,
+    getJokeData,
+    commentOnJoke,
+    likeJoke,
+    unlikeJoke,
+    deleteJoke
+}

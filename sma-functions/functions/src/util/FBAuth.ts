@@ -1,7 +1,8 @@
-const { admin, db } = require("./admin");
+import { admin, db } from './admin';
 
 // Match ID Tokens
-module.exports = (req, res, next) => {
+// FIXME: can we not use any types?
+const FBAuth = (req: any, res: any, next: any) => {
     let idToken;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
         idToken = req.headers.authorization.split('Bearer ')[1]; // taking the token
@@ -33,3 +34,5 @@ module.exports = (req, res, next) => {
     // OH because before we had to literally define all the user data, but now it's stuff that's stored in our database.
     // and we just extract it from our database if the user is logged in.
 };
+
+export default FBAuth;
