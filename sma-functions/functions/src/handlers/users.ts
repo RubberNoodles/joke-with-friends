@@ -1,18 +1,21 @@
 // File for dealing with authentication of users: signup, login
-import { admin, db } from '../util/admin';
+import { bucket, db } from '../util/admin';
 
 import config from '../util/config';
 import firebase from 'firebase';
 
-firebase.initializeApp(config);
 
 // helper handlers/functions
 
-import { validateSignupData, validateLoginData, simplifyUserData } from '../util/validators';
+import { validateSignupData, validateLoginData, simplifyUserData } from './../util/validators';
+import { ValidationError } from '../types/validate';
+import { User } from './../types'
 
 
+firebase.initializeApp(config);
 
-exports.signup = (req, res) => {
+
+const signup = async (req: any, res: any) => {
     const newUser = {
         email: req.body.email,
         password: req.body.password,
@@ -21,110 +24,105 @@ exports.signup = (req, res) => {
     };
 
     // we also want to give them an image.
-
     const noImg = 'no-img.jpg';
 
-    const { errors, valid } = validateSignupData(newUser);
+    try {
+        // validation
+        const possibleErrors: ValidationError[] = validateSignupData(newUser);
+        if (possibleErrors.length > 0) return res.status(400).json(possibleErrors);
 
-    if (!valid) return res.status(400).json(errors);
 
-    let token, userId;
+        // Validating the data
+        const docSnapshot = await db.doc(`/users/${newUser.handle}`).get();
 
-    // Validating the data
-    db.doc(`/users/${newUser.handle}`).get()
-        .then(doc => {
-            if (doc.exists) { //i guess all documents that .get() obtains has a parameter called .exists
-                return res.status(400).json({ handle: "This handle is already taken" })
-                // if the error pertains to "some field" the name will be "some field"
-            } else {
-                return firebase.auth()
-                    .createUserWithEmailAndPassword(newUser.email, newUser.password);
-                // apparently returning this ^ thing gives me the power to use ANOTHER .then
-                // we first check if handle is the same, then we create the user. If there's an error, it's a problem with the email
-            }
-        })
-        .then(data => {
-            // user is created, now we give an "access token"
-            userId = data.user.uid;
-            return data.user.getIdToken(); // this "returns a promise"
-        })
-        .then(idToken => {
-            //wtf is a token? I still don't know why we want aa token
-            token = idToken;
-            const userCredentials = {
-                handle: newUser.handle,
-                email: newUser.email,
-                imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImg}?alt=media`,
-                timeCreated: new Date().toISOString(),
-                userId
-            }
-            // .add and .set seem pretty similar (set will replace an entire document if need be)
-            return db.doc(`/users/${newUser.handle}`).set(userCredentials)
-        })
-        .then(data => {
-            return res.status(201).json({ token });
-        })
-        .catch(err => {
-            if (err.code === 'auth/email-already-in-use') {
-                return res.status(400).json({ email: "email already in use" });
-            } else if (err.code === 'auth/weak-password') {
-                return res.status(400).json({ password: "Strength: too weak" });
-            }
-            console.error(err)
-            return res.status(500).json({ server: err.code }) // Later I want to show 
-            // something like "Something went Wrong" this on the front end.
-        });
+        if (docSnapshot.exists) {
+            // if the error pertains to "some field" the name will be "some field"
+            return res.status(400).json({ handle: "This handle is already taken" })
+        }
+
+        const userData = await firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password);
+        if (userData.user == null) {
+            // Not sure when the .user can be null
+            return res.status(400).json({ handle: 'Unable to retrieve user data' })
+        }
+
+        const userIdToken = await userData.user.getIdToken();
+        const userCredentials: User = {
+            handle: newUser.handle,
+            email: newUser.email,
+            imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImg}?alt=media`,
+            timeCreated: new Date().toISOString(),
+            userId: userData.user.uid
+        }
+        db.doc(`/users/${newUser.handle}`).set(userCredentials);
+        return res.status(201).json({ userIdToken });
+
+    } catch (err) {
+
+        if (err.code === 'auth/email-already-in-use') {
+            return res.status(400).json({ email: "email already in use" });
+        } else if (err.code === 'auth/weak-password') {
+            return res.status(400).json({ password: "Strength: too weak" });
+        }
+        console.error(err)
+        return res.status(500).json({ server: err.code }) // Later I want to show 
+        // something like "Something went Wrong" this on the front end.
+
+    }
 };
 
 // helper authentication function
 
-exports.login = (req, res) => {
+const login = async (req: any, res: any) => {
 
     //first validate that the login fields are not retarded
-    const loginCredentials =
-    {
+    const loginCredentials = {
         password: req.body.password,
         email: req.body.email,
     };
 
-    const { errors, valid } = validateLoginData(loginCredentials);
+    try {
 
-    if (!valid) return res.status(400).json(errors);
+        const possibleErrors: ValidationError[] = validateLoginData(loginCredentials);
+        if (possibleErrors.length > 0) return res.status(400).json(possibleErrors);
 
-    firebase.auth().signInWithEmailAndPassword(loginCredentials.email, loginCredentials.password)
-        .then(data => {
-            return data.user.getIdToken();
-        })
-        .then(tokenId => {
-            return res.json({ tokenId });
-        })
-        .catch((err) => {
-            console.error(err);
-            if (err.code === "auth/wrong-password") {
-                return res.status(403).json({ email: "Error, email/password not found", password: "Error, email/password not found" }); // 403 is unauthorized
-            }
-            else if (err.code === "auth/invalid-email") {
-                return res.status(403).json({ email: "Please enter a valid email" });
-            }
-            else if (err.code === "auth/user-not-found") {
-                return res.status(403).json({ email: "Error, email/password not found", password: "Error, email/password not found" }); // 403 is unauthorized
-            }
-            return res.status(500).json({ error: err.code });
-        });
+
+        const userData = await firebase.auth().signInWithEmailAndPassword(loginCredentials.email, loginCredentials.password);
+        if (userData.user == null) {
+            // Not sure when the .user can be null
+            return res.status(400).json({ handle: 'Unable to retrieve user data' })
+        }
+        const userIdToken = await userData.user.getIdToken();
+        return res.json({ userIdToken });
+
+    } catch (err) {
+
+        console.error(err);
+        if (err.code === "auth/wrong-password") {
+            return res.status(403).json({ email: "Error, email/password not found", password: "Error, email/password not found" }); // 403 is unauthorized
+        }
+        else if (err.code === "auth/invalid-email") {
+            return res.status(403).json({ email: "Please enter a valid email" });
+        }
+        else if (err.code === "auth/user-not-found") {
+            return res.status(403).json({ email: "Error, email/password not found", password: "Error, email/password not found" }); // 403 is unauthorized
+        }
+        return res.status(500).json({ error: err.code });
+    }
+
 };
 
-exports.uploadUserData = (req, res) => {
-    const userData = simplifyUserData(req.body);
+const uploadUserData = async (req: any, res: any) => {
+    const newUserData = simplifyUserData(req.body);
     // there are three things, bio, website, and location.
 
-    db.doc(`users/${req.user.handle}`).update(userData)
-        .then(() => {
-            return res.json({ user: "User data updated" })
-        })
-        .catch(err => {
-            console.error(err);
-            return res.status(400).json({ error: err.code });
-        })
+    try {
+        await db.doc(`users/${req.user.handle}`).update(newUserData);
+        return res.json({ user: "User data updated" })
+    } catch (err) {
+        console.error(err);
+        return res.status(400).json({ error: err.code });
+    }
 };
 
 exports.getUserData = (req, res) => {
@@ -224,7 +222,7 @@ exports.uploadImage = (req, res) => {
     busboy.on('finish', () => {
         // complete busboy process? 
         // this admin stuff is in the firebase documentation.
-        admin.storage().bucket().upload(imageToBeUploaded.filepath, {
+        bucket.upload(imageToBeUploaded.filepath, {
             resumable: false,
             metadata: {
                 metadata: {
@@ -271,3 +269,5 @@ exports.markNotificationAsRead = (req, res) => {
 };
 
 // I want to try and implement an idea of "Groups" too.
+
+export { signup, login, uploadUserData }

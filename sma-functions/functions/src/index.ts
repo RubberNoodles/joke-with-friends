@@ -27,7 +27,7 @@ import {
 
 import FBAuth from './util/FBAuth';
 
-import express from 'express';
+import * as express from 'express';
 const app = express();
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional

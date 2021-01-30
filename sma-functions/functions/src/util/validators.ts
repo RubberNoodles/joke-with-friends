@@ -1,68 +1,35 @@
-/* eslint-disable no-useless-escape */
-const isEmpty = (string: string): boolean => {
-    if (string.trim() === '') {
-        return true;
-    } else {
-        return false;
-    }
+import { SignupData, LoginData } from './../types/validate';
+import { ValidationError } from './../types/validate'
+
+
+// if the list is empty, there are no errors
+const validateSignupData = (data: SignupData): ValidationError[] => {
+    const nestedErrs: ValidationError[][] = [
+        nonEmpty(data.email, 'email'),
+        validEmail(data.email, 'email'),
+        nonEmpty(data.password, 'password'),
+        nonEmpty(data.handle, 'username'),
+        noInvalidChars(data.handle, 'username', ['/']),
+        equal(data.password, data.confirmPassword, 'password')
+    ]
+    // flatten errors
+    // seems silly to have 'as ValidationError' in the middle,
+    // but it won't typecheck without it LOL
+    // https://schneidenbach.gitbooks.io/typescript-cookbook/content/functional-programming/flattening-array-of-arrays.html
+    return ([] as ValidationError[]).concat(...nestedErrs);
+}
+
+
+const validateLoginData = (data: LoginData): ValidationError[] => {
+    const nestedErrs: ValidationError[][] = [
+        nonEmpty(data.email, 'email'),
+        nonEmpty(data.password, 'password')
+    ]
+    return ([] as ValidationError[]).concat(...nestedErrs);
 };
 
-const isEmail = (email: string): boolean => {
-    const emailRegEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    if (email.match(emailRegEx)) return true;
-    else return false;
-};
 
-exports.validateSignupData = data => {
-
-    // Just boring shit to validate the fact all of the input data works.
-    // Note that errors are weird if one of the fields are not filled. But this is okay its more of 
-    // a problem on the frontend where we just never send in a null object.
-    let errors = {};
-    if (isEmpty(data.email)) {
-        errors.email = "Must not be empty";
-    } else if (!isEmail(data.email)) {
-        errors.email = "Must be a valid email address";
-    }
-
-    if (isEmpty(data.password)) {
-        errors.password = "Must not be empty";
-    }
-
-    if (isEmpty(data.handle)) {
-        errors.handle = "Must not be empty";
-    } else if (data.handle.includes("/")) {
-        errors.handle = "Invalid characters: Hint no '/' characters";
-    }
-
-    if (data.password !== data.confirmPassword) {
-        errors.confirmPassword = "Passwords do not match";
-    }
-
-    return {
-        errors,
-        valid: Object.keys(errors).length === 0 ? true : false
-    }
-};
-
-exports.validateLoginData = data => {
-    let errors = {};
-
-    if (isEmpty(data.password)) {
-        errors.password = "Must not be empty";
-    }
-
-    if (isEmpty(data.email)) {
-        errors.email = "Must not be empty";
-    }
-
-    return {
-        errors,
-        valid: Object.keys(errors).length === 0 ? true : false
-    };
-};
-
-exports.simplifyUserData = ({ bio, website, location }) => {
+const simplifyUserData = ({ bio, website, location }) => {
     let userData = {}
     if (!isEmpty(bio)) userData.bio = bio;
     if (!isEmpty(website)) {
@@ -75,4 +42,50 @@ exports.simplifyUserData = ({ bio, website, location }) => {
 
     if (!isEmpty(location)) userData.location = location;
     return userData
+}
+
+export { validateSignupData, validateLoginData, simplifyUserData }
+
+
+// HELPERS
+
+// the label property allows us to make better error messages basically
+const nonEmpty = (str: string, label: string): ValidationError[] => {
+    if (str.trim() === '') {
+        return [{ label: label, msg: 'Label must not be empty' }];
+    } else {
+        return [];
+    }
+};
+
+
+const validEmail = (email: string, label: string): ValidationError[] => {
+    const emailRegEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (email.match(emailRegEx)) {
+        return [];
+    } else {
+        return [{ label: label, msg: 'Email must be formatted properly' }];
+    }
+};
+
+const noInvalidChars = (str: string, label: string, invalidChars: string[]): ValidationError[] => {
+    let errs: ValidationError[] = [];
+    for (let char of invalidChars) {
+        if (str.includes(char)) {
+            errs.push({ msg: `Invalid character observed: ${char}`, label: label });
+            // if there are more than one invalid char, just ignore the other ones. 
+            // we don't need to clutter up the error messages
+            // maybe we can change this later on
+            break;
+        }
+    }
+    return errs;
+};
+
+const equal = (str1: string, str2: string, label: string): ValidationError[] => {
+    if (str1 === str2) {
+        return [];
+    } else {
+        return [{ msg: 'fields do not match', label: label }];
+    }
 }
