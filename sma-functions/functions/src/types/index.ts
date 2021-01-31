@@ -1,10 +1,12 @@
-// bad naming - allinfo about user
-export interface SuperUser {
-    credentials: User,
-    likes: Joke[],
+// bad naming - all info about user
+export interface SuperUser extends PublicUserData {
     notifications: Notification[]
 }
 
+export interface PublicUserData {
+    credentials: User,
+    likes: Joke[],
+}
 
 export interface JokeWithComments extends JokeNoID {
     comments: Comment[]
