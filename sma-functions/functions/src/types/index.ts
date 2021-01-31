@@ -1,3 +1,11 @@
+// bad naming - allinfo about user
+export interface SuperUser {
+    credentials: User,
+    likes: Joke[],
+    notifications: Notification[]
+}
+
+
 export interface JokeWithComments extends JokeNoID {
     comments: Comment[]
 }
@@ -18,6 +26,7 @@ export interface JokeNoID {
 }
 
 
+
 export interface User {
     email: string,
     handle: string, // username
@@ -33,6 +42,19 @@ export interface Comment {
     timeCreated: string,
     userHandle: string,
     userImgUrl: string,
+}
+
+export interface Notification extends NotificationNoID {
+    notificationId: string,
+}
+
+export interface NotificationNoID {
+    createdAt: string,
+    jokeId: string,
+    read: boolean,
+    recipient: string,
+    sender: string,
+    type: string,
 }
 
 // used in jokes.ts where we have async functions that should hold status code when fails

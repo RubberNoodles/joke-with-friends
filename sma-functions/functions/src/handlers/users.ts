@@ -9,7 +9,7 @@ import firebase from 'firebase';
 
 import { validateSignupData, validateLoginData, simplifyUserData } from './../util/validators';
 import { ValidationError } from '../types/validate';
-import { User } from './../types'
+import { User, Joke, Notification, NotificationNoID, SuperUser } from './../types'
 
 
 firebase.initializeApp(config);
@@ -113,7 +113,7 @@ const login = async (req: any, res: any) => {
 };
 
 const uploadUserData = async (req: any, res: any) => {
-    const newUserData = simplifyUserData(req.body);
+    const newUserData = simplifyUserData(req.body.bio, req.body.website, req.body.location);
     // there are three things, bio, website, and location.
 
     try {
@@ -125,40 +125,40 @@ const uploadUserData = async (req: any, res: any) => {
     }
 };
 
-exports.getUserData = (req, res) => {
-    let userData = {};
-    db.doc(`users/${req.user.handle}`).get()
-        .then(doc => {
-            if (doc.exists) {
-                userData.credentials = {};
-                userData.credentials = doc.data(); // this just receives the data from uploadUserData
-                return db.collection('likes').where('userHandle', '==', req.user.handle).get();
-            } else {
-                return res.status(500).json({ documents: "Requested Documents not found" });
+const getUserData = async (req: any, res: any) => {
+    try {
+
+        const doc = await db.doc(`users/${req.user.handle}`).get();
+        if (!doc.exists) {
+            return res.status(500).json({ documents: "Requested Documents not found" });
+        }
+
+        const user: User = doc.data() as User; // this just receives the data from uploadUserData
+        const likesDoc = await db.collection('likes').where('userHandle', '==', user.handle).get();
+        const jokesLiked: Joke[] = likesDoc.docs.map(jokeDoc => jokeDoc.data() as Joke)
+
+        const notificationsDoc = await db.collection('notifications')
+            .where("recipient", "==", user.handle)
+            .orderBy("timeCreated", "desc").limit(10).get();
+        const notifications: Notification[] = notificationsDoc.docs.map(doc => {
+            const notifNoID = doc.data() as NotificationNoID;
+            return {
+                notificationId: doc.id,
+                ...notifNoID
             }
-        })
-        .then(data => {
-            userData.likes = [];
-            data.forEach(jokeDoc => {
-                userData.likes.push(jokeDoc.data());
-            })
-            return db.collection('notifications').where("recipient", "==", req.user.handle)
-                .orderBy("timeCreated", "desc").limit(10).get();
-        })
-        .then(data => {
-            userData.notifications = [];
-            data.forEach(notifDoc => {
-                userData.notifications.push({
-                    ...notifDoc.data(),
-                    notificationId: notifDoc.id
-                });
-            })
-            return res.json(userData);
-        })
-        .catch(err => {
-            console.error(err);
-            return res.status(500).json({ error: err.code });
         });
+
+        // constructing user data
+        const superUser: SuperUser = {
+            credentials: user,
+            likes: jokesLiked,
+            notifications: notifications,
+        }
+        return res.json(superUser);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.code });
+    }
     // some of the data is ez pz, but the likes are a bit more weird.
 };
 
@@ -270,4 +270,4 @@ exports.markNotificationAsRead = (req, res) => {
 
 // I want to try and implement an idea of "Groups" too.
 
-export { signup, login, uploadUserData }
+export { signup, login, uploadUserData, getUserData }

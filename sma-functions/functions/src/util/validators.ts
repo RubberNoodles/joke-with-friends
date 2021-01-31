@@ -1,5 +1,4 @@
-import { SignupData, LoginData } from './../types/validate';
-import { ValidationError } from './../types/validate'
+import { SignupData, LoginData, ValidationError, SimpleUserData } from './../types/validate';
 
 
 // if the list is empty, there are no errors
@@ -28,9 +27,8 @@ const validateLoginData = (data: LoginData): ValidationError[] => {
     return ([] as ValidationError[]).concat(...nestedErrs);
 };
 
-
-const simplifyUserData = ({ bio, website, location }) => {
-    let userData = {}
+const simplifyUserData = (bio: string, website: string, location: string): SimpleUserData => {
+    let userData: SimpleUserData = { bio: undefined, website: undefined, location: undefined };
     if (!isEmpty(bio)) userData.bio = bio;
     if (!isEmpty(website)) {
         if (website.substring(0, 4) === 'http') {
@@ -49,9 +47,13 @@ export { validateSignupData, validateLoginData, simplifyUserData }
 
 // HELPERS
 
+const isEmpty = (s: string): boolean {
+    return (s.trim() === '');
+}
+
 // the label property allows us to make better error messages basically
 const nonEmpty = (str: string, label: string): ValidationError[] => {
-    if (str.trim() === '') {
+    if (isEmpty(str)) {
         return [{ label: label, msg: 'Label must not be empty' }];
     } else {
         return [];
