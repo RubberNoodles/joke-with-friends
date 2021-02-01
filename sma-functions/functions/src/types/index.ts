@@ -28,7 +28,6 @@ export interface JokeNoID {
 }
 
 
-
 export interface User {
     email: string,
     handle: string, // username
