@@ -47,9 +47,7 @@ export { validateSignupData, validateLoginData, simplifyUserData }
 
 // HELPERS
 
-const isEmpty = (s: string): boolean {
-    return (s.trim() === '');
-}
+const isEmpty = (s: string): boolean => (s.trim() === '');
 
 // the label property allows us to make better error messages basically
 const nonEmpty = (str: string, label: string): ValidationError[] => {

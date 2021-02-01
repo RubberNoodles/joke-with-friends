@@ -11,11 +11,18 @@ import { validateSignupData, validateLoginData, simplifyUserData } from './../ut
 import { ValidationError } from '../types/validate';
 import { User, Joke, Notification, NotificationNoID, SuperUser, PublicUserData } from './../types'
 
+// other imports
+import * as express from 'express';
+import * as BusBoy from 'busboy';
+import * as path from 'path' // wtf does this do?
+import * as os from 'os' // probably along with above its dealing with pathing shit.
+import * as fs from 'fs'; // filesystem
+
 
 firebase.initializeApp(config);
 
 
-const signup = async (req: any, res: any) => {
+const signup = async (req: express.Request, res: express.Response) => {
     const newUser = {
         email: req.body.email,
         password: req.body.password,
@@ -73,7 +80,7 @@ const signup = async (req: any, res: any) => {
 
 // helper authentication function
 
-const login = async (req: any, res: any) => {
+const login = async (req: express.Request, res: express.Response) => {
 
     //first validate that the login fields are not retarded
     const loginCredentials = {
@@ -112,7 +119,10 @@ const login = async (req: any, res: any) => {
 
 };
 
-const uploadUserData = async (req: any, res: any) => {
+// have to use req: any so req.user.handle typechecks
+// this also happens later on a couple times
+// TODO: Figure out a way to make better types
+const uploadUserData = async (req: any, res: express.Response) => {
     const newUserData = simplifyUserData(req.body.bio, req.body.website, req.body.location);
     // there are three things, bio, website, and location.
 
@@ -125,7 +135,7 @@ const uploadUserData = async (req: any, res: any) => {
     }
 };
 
-const getUserData = async (req: any, res: any) => {
+const getUserData = async (req: any, res: express.Response) => {
     try {
 
         const doc = await db.doc(`users/${req.user.handle}`).get();
@@ -162,7 +172,7 @@ const getUserData = async (req: any, res: any) => {
     // some of the data is ez pz, but the likes are a bit more weird.
 };
 
-const getPublicUserData = async (req: any, res: any) => {
+const getPublicUserData = async (req: express.Request, res: express.Response) => {
     try {
         // get user doc data and check if it exists
         const doc = await db.doc(`/users/${req.params.handle}`).get();
@@ -189,21 +199,15 @@ const getPublicUserData = async (req: any, res: any) => {
     }
 };
 
-exports.uploadImage = (req, res) => {
-    const BusBoy = require('busboy');
-    const path = require('path'); // wtf does this do?
-    const os = require('os'); // probably along with above its dealing with pathing shit.
-    const fs = require('fs'); // filesystem
-
-    let imageFileName;
-    let imageToBeUploaded;
+const uploadImage = async (req: any, res: express.Response) => {
 
     const busboy = new BusBoy({ headers: req.headers });
     // where do we start importing the images again? I forget lmao
     // I'm guessing it's req.headers that contains the image tho hmm
 
-    busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+    let imageFileName: string, imageToBeUploaded: { filepath: string; mimetype: string; };
 
+    busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
         // we want to prevent bad mimetypes
         if (mimetype !== 'image/jpeg' && mimetype !== 'image/png') {
             return res.status(400).json({ error: "Wrong file type submitted" });
@@ -248,7 +252,7 @@ exports.uploadImage = (req, res) => {
     busboy.end(req.rawBody);
 };
 
-const markNotificationAsRead = async (req: any, res: any) => {
+const markNotificationAsRead = async (req: express.Request, res: express.Response) => {
     // body input data is going to be an array of seen notifications
     // i'll just pretend like it's an array of id's and see where that goes
     // ok so there was the idea 
@@ -262,11 +266,11 @@ const markNotificationAsRead = async (req: any, res: any) => {
         return res.status(200).json({ notifications: "Marked as read." });
     } catch (err) {
         console.error(err);
-        return req.status(404).json({ error: err.code });
+        return res.status(404).json({ error: err.code });
     }
 
 };
 
 // I want to try and implement an idea of "Groups" too.
 
-export { signup, login, uploadUserData, getUserData, getPublicUserData, markNotificationAsRead }
+export { signup, login, uploadUserData, getUserData, getPublicUserData, markNotificationAsRead, uploadImage }
