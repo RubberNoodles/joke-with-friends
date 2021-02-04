@@ -53,6 +53,7 @@ const signup = async (req: express.Request, res: express.Response) => {
             return res.status(400).json({ handle: 'Unable to retrieve user data' })
         }
 
+        // user is created, now we give an "access token"
         const userIdToken = await userData.user.getIdToken();
         const userCredentials: User = {
             handle: newUser.handle,
@@ -61,6 +62,7 @@ const signup = async (req: express.Request, res: express.Response) => {
             timeCreated: new Date().toISOString(),
             userId: userData.user.uid
         }
+        // .add and .set seem pretty similar (set will replace an entire document if need be)
         db.doc(`/users/${newUser.handle}`).set(userCredentials);
         return res.status(201).json({ userIdToken });
 
@@ -119,7 +121,7 @@ const login = async (req: express.Request, res: express.Response) => {
 
 };
 
-// have to use req: any so req.user.handle typechecks
+// have to use req: any so req.user and req.body typechecks
 // this also happens later on a couple times
 // TODO: Figure out a way to make better types
 const uploadUserData = async (req: any, res: express.Response) => {
@@ -159,6 +161,7 @@ const getUserData = async (req: any, res: express.Response) => {
         });
 
         // constructing user data
+        // a Superuser is just a user with more data: the jokes they liked and notifs they have
         const superUser: SuperUser = {
             credentials: user,
             likes: jokesLiked,
@@ -179,6 +182,8 @@ const getPublicUserData = async (req: express.Request, res: express.Response) =>
         if (!doc.exists) {
             return res.status(404).json({ error: "User not found" });
         }
+        // cast the firebase .data() into a User type. 
+        // Is this the best way? Should we do some decoding? 
         const user = doc.data() as User;
 
         // get jokes
@@ -194,6 +199,7 @@ const getPublicUserData = async (req: express.Request, res: express.Response) =>
         }
         return res.status(200).json(publicUserData);
     } catch (err) {
+
         console.log(err);
         return res.json({ error: err.code })
     }
@@ -222,6 +228,9 @@ const uploadImage = async (req: any, res: express.Response) => {
         file.pipe(fs.createWriteStream(filepath));
     });
 
+    // Can busboy handle async functions?
+    // if they can, it'll be super nice. 
+    // Right now, rewriting this with async is a little more uglier. 
     busboy.on('finish', () => {
         // complete busboy process? 
         // this admin stuff is in the firebase documentation.
