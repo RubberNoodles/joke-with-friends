@@ -57,15 +57,18 @@ exports.createNotificationOnLike = functions.firestore.document(`likes/{id}`)
     .onCreate(snapshot => {
         db.doc(`/Jokes/${snapshot.data().jokeId}`).get()
             .then(doc => {
-                if (doc.exists && doc.data().userHandle != snapshot.data().userHandle) {
+                if (doc.exists && doc.data()!.userHandle != snapshot.data().userHandle) {
                     return db.doc(`/notifications/${snapshot.id}`).set({
                         createdAt: new Date().toISOString(),
-                        recipient: doc.data().handle,
+                        recipient: doc.data()!.handle, // I had to add ! to avoid "Object is possibly 'undefined'" error
                         sender: snapshot.data().userHandle,
                         jokeId: snapshot.data().jokeId,
                         type: "like",
                         read: false
                     })
+                } else {
+                    console.error("Notifications not found");
+                    return;
                 }
             })
             .catch(err => {
@@ -87,10 +90,10 @@ exports.createNotificationOnComment = functions.firestore.document(`comments/{id
     .onCreate(snapshot => {
         return db.doc(`/Jokes/${snapshot.data().jokeId}`).get()
             .then(doc => {
-                if (doc.exists && doc.data().userHandle != snapshot.data().userHandle) {
+                if (doc.exists && doc.data()!.userHandle != snapshot.data().userHandle) {
                     return db.doc(`/notifications/${snapshot.id}`).set({
                         createdAt: new Date().toISOString(),
-                        recipient: doc.data().handle,
+                        recipient: doc.data()!.handle,
                         sender: snapshot.data().userHandle,
                         jokeId: snapshot.data().jokeId,
                         type: "comment",
@@ -125,6 +128,7 @@ exports.changePictureOnUserUpdate = functions.firestore.document(`users/{handle}
                     return;
                 })
         }
+        return;
     });
 
 exports.deleteDataOnJokeDelete = functions.firestore.document(`Jokes/{jokeId}`)

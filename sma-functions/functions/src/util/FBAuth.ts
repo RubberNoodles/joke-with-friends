@@ -5,11 +5,11 @@ import { User } from './../types';
 // Match ID Tokens
 // TODO: find out how to type check req
 
-interface ExtraRequest extends express.Request {
+interface ExtendedRequest extends express.Request {
     [key: string]: any
 }
 
-const FBAuth = async (req: ExtraRequest, res: express.Response, next: express.NextFunction) => {
+const FBAuth = async (req: ExtendedRequest, res: express.Response, next: express.NextFunction) => {
     try {
         let idToken;
         if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {

@@ -185,7 +185,7 @@ const deleteJoke = async (req: any, res: any) => {
         const joke: JokeNoID = jokeDoc.data() as JokeNoID;
 
         // TODO: use later
-        const likeCount = joke.likeCount;
+        // const likeCount = joke.likeCount;
 
         if (jokeDoc.exists) {
             // cheeck authorization
