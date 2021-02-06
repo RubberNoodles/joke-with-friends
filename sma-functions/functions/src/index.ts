@@ -25,8 +25,7 @@ import {
 } from './handlers/users';
 
 
-import * as FBAuth from './util/FBAuth'; // TODO: does not get imported correctly in compiled .js file
-
+import FBAuth from './util/FBAuth'; 
 import * as express from 'express';
 const app = express();
 // Your web app's Firebase configuration
