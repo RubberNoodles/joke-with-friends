@@ -59,7 +59,7 @@ exports.createNotificationOnLike = functions.firestore.document(`likes/{id}`)
             .then(doc => {
                 if (doc.exists && doc.data()!.userHandle != snapshot.data().userHandle) {
                     return db.doc(`/notifications/${snapshot.id}`).set({
-                        createdAt: new Date().toISOString(),
+                        timeCreated: new Date().toISOString(),
                         recipient: doc.data()!.handle, // I had to add ! to avoid "Object is possibly 'undefined'" error
                         sender: snapshot.data().userHandle,
                         jokeId: snapshot.data().jokeId,
@@ -92,7 +92,7 @@ exports.createNotificationOnComment = functions.firestore.document(`comments/{id
             .then(doc => {
                 if (doc.exists && doc.data()!.userHandle != snapshot.data().userHandle) {
                     return db.doc(`/notifications/${snapshot.id}`).set({
-                        createdAt: new Date().toISOString(),
+                        timeCreated: new Date().toISOString(),
                         recipient: doc.data()!.handle,
                         sender: snapshot.data().userHandle,
                         jokeId: snapshot.data().jokeId,

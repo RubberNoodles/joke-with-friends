@@ -28,7 +28,7 @@ const validateLoginData = (data: LoginData): ValidationError[] => {
 };
 
 const simplifyUserData = (bio: string, website: string, location: string): SimpleUserData => {
-    let userData: SimpleUserData = { bio: undefined, website: undefined, location: undefined };
+    let userData: SimpleUserData = {};
     if (!isEmpty(bio)) userData.bio = bio;
     if (!isEmpty(website)) {
         if (website.substring(0, 4) === 'http') {

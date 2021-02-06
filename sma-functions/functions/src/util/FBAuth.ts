@@ -4,7 +4,8 @@ import { User } from './../types';
 
 // Match ID Tokens
 // TODO: find out how to type check req
-
+// Bandaid fix: Just extending a class, but we should do more later
+// because we also want req.body and req.user? handlers/users.ts:124:1
 interface ExtendedRequest extends express.Request {
     [key: string]: any
 }
