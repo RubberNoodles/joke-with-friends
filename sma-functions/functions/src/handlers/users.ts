@@ -9,7 +9,7 @@ import firebase from 'firebase';
 
 import { validateSignupData, validateLoginData, simplifyUserData } from './../util/validators';
 import { ValidationError } from '../types/validate';
-import { User, Joke, Notification, NotificationNoID, SuperUser, PublicUserData } from './../types'
+import { User, Joke, Notification, NotificationNoID, SuperUser, PublicUserData, ExtendedRequest } from './../types'
 
 // other imports
 import * as express from 'express';
@@ -20,7 +20,6 @@ import * as fs from 'fs'; // filesystem
 
 
 firebase.initializeApp(config);
-
 
 const signup = async (req: express.Request, res: express.Response) => {
     const newUser = {
@@ -121,10 +120,8 @@ const login = async (req: express.Request, res: express.Response) => {
 
 };
 
-// have to use req: any so req.user and req.body typechecks
-// this also happens later on a couple times
-// TODO: Figure out a way to make better types
-const uploadUserData = async (req: any, res: express.Response) => {
+
+const uploadUserData = async (req: ExtendedRequest, res: express.Response) => {
     const newUserData = simplifyUserData(req.body.bio, req.body.website, req.body.location);
     // there are three things, bio, website, and location.
 
@@ -137,7 +134,7 @@ const uploadUserData = async (req: any, res: express.Response) => {
     }
 };
 
-const getUserData = async (req: any, res: express.Response) => {
+const getUserData = async (req: ExtendedRequest, res: express.Response) => {
     try {
 
         const doc = await db.doc(`users/${req.user.handle}`).get();
@@ -205,7 +202,7 @@ const getPublicUserData = async (req: express.Request, res: express.Response) =>
     }
 };
 
-const uploadImage = async (req: any, res: express.Response) => {
+const uploadImage = async (req: ExtendedRequest, res: express.Response) => {
 
     const busboy = new BusBoy({ headers: req.headers });
     // where do we start importing the images again? I forget lmao
@@ -276,14 +273,14 @@ const markNotificationAsRead = async (req: express.Request, res: express.Respons
         return res.status(200).json({ notifications: "Marked as read." });
     } catch (err) {
         if (err.code === 5) {
-            return res.status(404).json({ 
-                error: "One notification in the following list was not found", 
+            return res.status(404).json({
+                error: "One notification in the following list was not found",
                 list: req.body,
                 details: err.details
-                })
+            })
         } else {
-        console.error(err);
-        return res.status(404).json({err: err.code, details: err.details});
+            console.error(err);
+            return res.status(404).json({ err: err.code, details: err.details });
         }
     }
 

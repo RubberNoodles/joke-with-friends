@@ -1,7 +1,8 @@
 /* eslint-disable eqeqeq */
 // Things that have to do with handling jokes. Atm you can make a joke, and get all the jokes.
 import { db } from './../util/admin';
-import { Joke, JokeNoID, Comment, instanceOfError, error, JokeWithComments } from './../types';
+import { Joke, JokeNoID, Comment, instanceOfError, error, JokeWithComments, ExtendedRequest } from './../types';
+import * as express from 'express';
 
 // EXPRESS ALLOWS ASYNC HANDLERS PGOPOGPOGPOGPO
 // ⠄⠄⠄⠄⠄⠄⣀⣀⣀⣤⣶⣿⣿⣶⣶⣶⣤⣄⣠⣴⣶⣿⣿⣿⣿⣶⣦⣄⠄⠄
@@ -22,8 +23,7 @@ import { Joke, JokeNoID, Comment, instanceOfError, error, JokeWithComments } fro
 
 
 
-// change to async await?
-const getAllJokes = (req: any, res: any) => {
+const getAllJokes = (req: express.Request, res: express.Response) => {
     // https://firebase.google.com/docs/firestore/query-data/get-data for helpful documentation
     db.collection('Jokes')
         .orderBy('timeCreated', 'desc') // descending order; i think .get is basically a request (oh its the method?)
@@ -46,7 +46,7 @@ const getAllJokes = (req: any, res: any) => {
         });
 };
 
-const postOneJoke = (req: any, res: any) => {
+const postOneJoke = (req: ExtendedRequest, res: express.Response) => {
     let newJoke: JokeNoID = {
         body: req.body.body,
         handle: req.user.handle,
@@ -71,7 +71,7 @@ const postOneJoke = (req: any, res: any) => {
 };
 
 
-const getJokeData = async (req: any, res: any) => {
+const getJokeData = async (req: express.Request, res: express.Response) => {
     // gets all the data about the joke, and then also the data w.r.t to the comments
 
     try {
@@ -97,7 +97,7 @@ const getJokeData = async (req: any, res: any) => {
     }
 };
 
-const commentOnJoke = async (req: any, res: any) => {
+const commentOnJoke = async (req: ExtendedRequest, res: express.Response) => {
     if (req.body.body.trim() === '') return res.status(400).json({ body: "Must not be empty" });
 
     const newComment: Comment = {
@@ -127,7 +127,7 @@ const commentOnJoke = async (req: any, res: any) => {
     }
 };
 
-const likeJoke = async (req: any, res: any) => {
+const likeJoke = async (req: ExtendedRequest, res: express.Response) => {
     try {
         // initialize documents
         // this fetches firestore twice. Maybe change?
@@ -154,7 +154,7 @@ const likeJoke = async (req: any, res: any) => {
 };
 
 
-const unlikeJoke = async (req: any, res: any) => {
+const unlikeJoke = async (req: ExtendedRequest, res: express.Response) => {
     try { // initialize documents
         // this fetches firestore twice. Maybe change?
 
@@ -177,7 +177,7 @@ const unlikeJoke = async (req: any, res: any) => {
 
 };
 
-const deleteJoke = async (req: any, res: any) => {
+const deleteJoke = async (req: ExtendedRequest, res: express.Response) => {
     try {
         // check if the joke was made by the user.
         // since we need different errors if the joke does not exist, 
@@ -312,7 +312,7 @@ const getLikeDocument = async (handle: string, jokeId: string): Promise<Firebase
 // in a best case scenario, I would be able to know the type of 'res'
 // in actuality, I have no idea. any types are kind of a bad pracctice in typescript
 // bugs might occur if `err` doesn't have a `.code` attribute
-const handleError = async (err: any, res: any) => {
+const handleError = async (err: any, res: express.Response) => {
     if (instanceOfError(err)) {
         // we have access to status and msg
         return res.status(err.status).json({ error: err.msg, extraInfo: err.extra })

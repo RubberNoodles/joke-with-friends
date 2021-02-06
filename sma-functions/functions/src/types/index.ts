@@ -1,3 +1,10 @@
+import * as express from 'express';
+
+export interface ExtendedRequest extends express.Request {
+    [key: string]: any
+}
+
+
 // bad naming - all info about user
 export interface SuperUser extends PublicUserData {
     notifications: Notification[]
