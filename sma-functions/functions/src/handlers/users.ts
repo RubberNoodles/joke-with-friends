@@ -226,6 +226,7 @@ const uploadImage = async (req: any, res: express.Response) => {
         imageToBeUploaded = { filepath, mimetype } // this variable doesn't actually have cool info
         // .pipe is some node.js thing what.
         file.pipe(fs.createWriteStream(filepath));
+        return;
     });
 
     // Can busboy handle async functions?

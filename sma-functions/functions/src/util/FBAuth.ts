@@ -1,10 +1,15 @@
 import { auth, db } from './admin';
 import * as express from 'express';
-import { User } from './../types'
+import { User } from './../types';
 
 // Match ID Tokens
 // TODO: find out how to type check req
-const FBAuth = async (req: any, res: express.Response, next: express.NextFunction) => {
+
+interface ExtraRequest extends express.Request {
+    [key: string]: any
+}
+
+const FBAuth = async (req: ExtraRequest, res: express.Response, next: express.NextFunction) => {
     try {
         let idToken;
         if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
@@ -16,6 +21,7 @@ const FBAuth = async (req: any, res: express.Response, next: express.NextFunctio
 
         //verify that the token is the same as the one issued by us
         const decodedToken = await auth.verifyIdToken(idToken);
+        req.user = decodedToken;
         const data = await db.collection('users')
             .where('userId', '==', req.user.uid)
             .limit(1)
@@ -23,7 +29,7 @@ const FBAuth = async (req: any, res: express.Response, next: express.NextFunctio
 
         const userData = data.docs[0].data() as User;
         /** before the typescript thing, the code was similar to this:
-         * 
+         *
          *  req.user = decodedToken;
          *  req.user.handle = data.docs[0].data().handle;
          *  req.user.imageUrl = data.docs[0].data().imageUrl;
@@ -34,7 +40,7 @@ const FBAuth = async (req: any, res: express.Response, next: express.NextFunctio
          * 
          */
         req.user = userData;
-        return next()
+        return next();
     } catch (err) {
         console.error('Error while verifying token');
         return res.status(403).json(err);

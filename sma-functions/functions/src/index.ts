@@ -1,4 +1,4 @@
-import functions from 'firebase-functions';
+import * as functions from 'firebase-functions';
 
 import { db } from './util/admin';
 // Create and Deploy Your First Cloud Functions
@@ -25,7 +25,7 @@ import {
 } from './handlers/users';
 
 
-import FBAuth from './util/FBAuth';
+import * as FBAuth from './util/FBAuth'; // TODO: does not get imported correctly in compiled .js file
 
 import * as express from 'express';
 const app = express();
