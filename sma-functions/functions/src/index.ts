@@ -1,4 +1,4 @@
-import functions from 'firebase-functions';
+import * as functions from 'firebase-functions';
 
 import { db } from './util/admin';
 // Create and Deploy Your First Cloud Functions
@@ -25,8 +25,7 @@ import {
 } from './handlers/users';
 
 
-import FBAuth from './util/FBAuth';
-
+import FBAuth from './util/FBAuth'; 
 import * as express from 'express';
 const app = express();
 // Your web app's Firebase configuration
@@ -58,15 +57,18 @@ exports.createNotificationOnLike = functions.firestore.document(`likes/{id}`)
     .onCreate(snapshot => {
         db.doc(`/Jokes/${snapshot.data().jokeId}`).get()
             .then(doc => {
-                if (doc.exists && doc.data().userHandle != snapshot.data().userHandle) {
+                if (doc.exists && doc.data()!.userHandle != snapshot.data().userHandle) {
                     return db.doc(`/notifications/${snapshot.id}`).set({
-                        createdAt: new Date().toISOString(),
-                        recipient: doc.data().handle,
+                        timeCreated: new Date().toISOString(),
+                        recipient: doc.data()!.handle, // I had to add ! to avoid "Object is possibly 'undefined'" error
                         sender: snapshot.data().userHandle,
                         jokeId: snapshot.data().jokeId,
                         type: "like",
                         read: false
                     })
+                } else {
+                    console.error("Notifications not found");
+                    return;
                 }
             })
             .catch(err => {
@@ -88,10 +90,10 @@ exports.createNotificationOnComment = functions.firestore.document(`comments/{id
     .onCreate(snapshot => {
         return db.doc(`/Jokes/${snapshot.data().jokeId}`).get()
             .then(doc => {
-                if (doc.exists && doc.data().userHandle != snapshot.data().userHandle) {
+                if (doc.exists && doc.data()!.userHandle != snapshot.data().userHandle) {
                     return db.doc(`/notifications/${snapshot.id}`).set({
-                        createdAt: new Date().toISOString(),
-                        recipient: doc.data().handle,
+                        timeCreated: new Date().toISOString(),
+                        recipient: doc.data()!.handle,
                         sender: snapshot.data().userHandle,
                         jokeId: snapshot.data().jokeId,
                         type: "comment",
@@ -126,6 +128,7 @@ exports.changePictureOnUserUpdate = functions.firestore.document(`users/{handle}
                     return;
                 })
         }
+        return;
     });
 
 exports.deleteDataOnJokeDelete = functions.firestore.document(`Jokes/{jokeId}`)

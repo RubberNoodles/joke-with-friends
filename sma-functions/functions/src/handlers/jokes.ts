@@ -59,7 +59,7 @@ const postOneJoke = (req: any, res: any) => {
     db.collection('Jokes')
         .add(newJoke) // add will create a random id, while set will give us the name of an id.
         .then(doc => {
-            return res.json({
+            return res.status(201).json({
                 ...newJoke,
                 jokeId: doc.id
             });
@@ -119,7 +119,7 @@ const commentOnJoke = async (req: any, res: any) => {
         }
 
         await db.collection('comments').add(newComment);
-        return res.status(200).json(newComment);
+        return res.status(201).json(newComment);
     }
     catch (err) {
         console.error(err);
@@ -139,7 +139,8 @@ const likeJoke = async (req: any, res: any) => {
         if (likeDoc.empty) {
             await db.collection('likes').add({
                 jokeId: req.params.jokeId,
-                userHandle: req.user.handle
+                userHandle: req.user.handle,
+                timeCreated: new Date().toISOString()
             });
             // update jokeDocument
             jokeDocument.update({ likeCount: jokeData.likeCount + 1 });
@@ -185,7 +186,7 @@ const deleteJoke = async (req: any, res: any) => {
         const joke: JokeNoID = jokeDoc.data() as JokeNoID;
 
         // TODO: use later
-        const likeCount = joke.likeCount;
+        // const likeCount = joke.likeCount;
 
         if (jokeDoc.exists) {
             // cheeck authorization

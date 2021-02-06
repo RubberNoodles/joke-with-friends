@@ -187,7 +187,7 @@ const getPublicUserData = async (req: express.Request, res: express.Response) =>
         const user = doc.data() as User;
 
         // get jokes
-        const jokesSnapshot = await db.collection("Jokes")
+        const jokesSnapshot = await db.collection("likes")
             .where("userHandle", "==", user.handle)
             .orderBy("timeCreated", "desc")
             .get();
@@ -226,6 +226,7 @@ const uploadImage = async (req: any, res: express.Response) => {
         imageToBeUploaded = { filepath, mimetype } // this variable doesn't actually have cool info
         // .pipe is some node.js thing what.
         file.pipe(fs.createWriteStream(filepath));
+        return;
     });
 
     // Can busboy handle async functions?
@@ -274,8 +275,16 @@ const markNotificationAsRead = async (req: express.Request, res: express.Respons
         await batch.commit()
         return res.status(200).json({ notifications: "Marked as read." });
     } catch (err) {
+        if (err.code === 5) {
+            return res.status(404).json({ 
+                error: "One notification in the following list was not found", 
+                list: req.body,
+                details: err.details
+                })
+        } else {
         console.error(err);
-        return res.status(404).json({ error: err.code });
+        return res.status(404).json({err: err.code, details: err.details});
+        }
     }
 
 };
