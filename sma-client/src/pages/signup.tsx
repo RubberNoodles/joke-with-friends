@@ -2,22 +2,19 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 // MUI imports
-import { makeStyles } from '@material-ui/styles';
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 
-const useStyles = makeStyles(theme => (
-    {
-        textField: theme.textField
-    })
-);
+
+// other imports
+import laughSVG from '../components/laugh.svg';
+
 
 const padding = 20;
 function Signup() {
     const [errors, setErrors] = useState({ email: '', password: '', confirmPassword: '', handle: '' });
-    const classes = useStyles();
 
     const [isLoading, setIsLoading] = useState(false);
     const [password, setPassword] = useState('');
@@ -25,19 +22,19 @@ function Signup() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [handle, setHandle] = useState('');
 
-    const handlePasswordChange = (event) => {
+    const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setPassword(event.target.value);
     };
 
-    const handleEmailChange = (event) => {
+    const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setEmail(event.target.value);
     };
 
-    const handleConfirmPasswordChange = (event) => {
+    const handleConfirmPasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setConfirmPassword(event.target.value);
     };
 
-    const handleHandleChange = (event) => {
+    const handleHandleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setHandle(event.target.value);
     };
 
@@ -53,7 +50,8 @@ function Signup() {
                 console.log('res is shown below:')
                 console.log(res);
                 localStorage.setItem('FBItem', `Bearer ${res.data.token}`);
-                window.location = "/"; // this should redirect to some verification
+                // typescript window locations is technically an objeect containing href
+                window.location.href = '/'; // this should redirect to some verification
                 // page at some point idk. 
             })
             .catch(err => {
@@ -82,11 +80,10 @@ function Signup() {
                         justify="center"
                         alignItems="center"
                     >
-                        <img src="../components/laugh.svg" />
+                        <img src={laughSVG} />
                         <div style={{ height: padding }} />
                         <TextField
                             label="Email"
-                            className={classes.textField}
                             value={email}
                             onChange={handleEmailChange}
                             variant="outlined"
@@ -94,7 +91,6 @@ function Signup() {
                             helperText={errors.email} />
                         <TextField
                             label="Username"
-                            className={classes.textField}
                             value={handle}
                             onChange={handleHandleChange}
                             variant="outlined"
@@ -102,7 +98,6 @@ function Signup() {
                             helperText={errors.handle} />
                         <TextField
                             label="Password"
-                            className={classes.textField}
                             value={password}
                             onChange={handlePasswordChange}
                             variant="outlined"
@@ -110,7 +105,6 @@ function Signup() {
                             helperText={errors.password} />
                         <TextField
                             label="Confirm Password"
-                            className={classes.textField}
                             value={confirmPassword}
                             onChange={handleConfirmPasswordChange}
                             variant="outlined"

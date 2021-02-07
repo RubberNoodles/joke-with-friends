@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     apiKey: "AIzaSyA9U8oP2sL9Q162smFAEpGxxcPTpGkSeJc",
     authDomain: "social-media-6297e.firebaseapp.com",
     databaseURL: "https://social-media-6297e-default-rtdb.firebaseio.com",
