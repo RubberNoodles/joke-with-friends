@@ -54,8 +54,11 @@ function Login() {
 
     return (
         <Grid container>
-            <Grid item xs={12} sm={6}>
-
+            <Grid xs={12} sm={6}>
+                <Grid item justify="center"
+                    alignItems="center">
+                    <img src='http://placekitten.com/200/300' />
+                </Grid>
             </Grid>
             <Grid container item
                 xs={12} sm={6}
