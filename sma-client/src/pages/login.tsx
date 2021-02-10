@@ -38,7 +38,8 @@ function Login() {
             .post('https://us-central1-social-media-6297e.cloudfunctions.net/api/login', { email, password })
             .then(res => {
                 setIsLoading(false);
-                localStorage.setItem('FBItem', `Bearer ${res.data.tokenId}`);
+                console.log(res.data);
+                localStorage.setItem('FBItem', `Bearer ${res.data.userIdToken}`);
                 console.log(res.data.tokenId);
                 window.location.href = '/';
             })
